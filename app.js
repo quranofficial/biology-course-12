@@ -1,3 +1,79 @@
+const SUPABASE_FUNCTION_URL = "https://nyflqakexqbsujykjkam.supabase.co/functions/v1/smart-handler";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zHGmZTaVOdnGiXJuAZmIdw_K0e8BjlS";
+
+function getDeviceToken() {
+  let token = localStorage.getItem("biology_device_token");
+  if (!token) {
+    token = crypto.randomUUID();
+    localStorage.setItem("biology_device_token", token);
+  }
+  return token;
+}
+async function activationRequest(payload) {
+  const response = await fetch(SUPABASE_FUNCTION_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_PUBLISHABLE_KEY
+    },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "پەیوەندی بە سێرڤەر سەرکەوتوو نەبوو.");
+  return result;
+}
+function showActivationMessage(message, isError = false) {
+  const el = $("activationMessage");
+  el.textContent = message;
+  el.classList.toggle("error", isError);
+}
+async function unlockCourse() {
+  $("activationGate").hidden = true;
+  $("subjectHome").hidden = false;
+  $("courseLayout").hidden = true;
+  try { await readManifest(); renderSubjects(); }
+  catch(error) {
+    $("subjectGrid").innerHTML = '<div class="empty-state">نەتوانرا فایلەکانی data بخوێندرێنەوە: ' + escapeHtml(error.message) + '</div>';
+  }
+}
+async function initializeActivation() {
+  $("subjectHome").hidden = true;
+  $("courseLayout").hidden = true;
+  $("activationGate").hidden = false;
+  const token = getDeviceToken();
+  try {
+    const result = await activationRequest({action:"check", device_token:token});
+    if (result.activated) {
+      await unlockCourse();
+      return;
+    }
+    showActivationMessage("کۆدی چالاککردنت بنووسە.");
+  } catch(error) {
+    showActivationMessage("پشکنین نەکرا: " + error.message + " تکایە پەیوەندی ئینتەرنێت بپشکنە.", true);
+  }
+}
+$("activationForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = $("activationButton");
+  const code = $("activationCode").value.trim().toUpperCase();
+  button.disabled = true;
+  showActivationMessage("کۆدەکە پشکنین دەکرێت...");
+  try {
+    const result = await activationRequest({
+      action:"activate",
+      code,
+      device_token:getDeviceToken()
+    });
+    if (!result.activated) throw new Error("کۆدی چالاککردن دروست نییە.");
+    showActivationMessage("چالاککردن سەرکەوتوو بوو.");
+    await unlockCourse();
+  } catch(error) {
+    showActivationMessage(error.message || "چالاککردن سەرکەوتوو نەبوو.", true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
 const $ = (id) => document.getElementById(id);
 let lessons = [];
 let manifestFiles = [];
@@ -190,7 +266,6 @@ $("backSubjects").addEventListener("click",()=>{$("courseLayout").hidden=true;$(
 async function init() {
  $("year").textContent=new Date().getFullYear();
  $("homeYear").textContent=new Date().getFullYear();
- try { await readManifest(); renderSubjects(); }
- catch(error) { $("subjectGrid").innerHTML='<div class="empty-state">نەتوانرا فایلەکانی data بخوێندرێنەوە: ' + escapeHtml(error.message) + '</div>'; }
+ await initializeActivation();
 }
 init();
