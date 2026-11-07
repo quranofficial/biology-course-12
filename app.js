@@ -98,7 +98,7 @@ async function unlockCourse() {
   $("courseLayout").hidden = true;
   try { await readManifest(); renderSubjects(); }
   catch(error) {
-    $("subjectGrid").innerHTML = '<div class="empty-state">نەتوانرا فایلەکانی data بخوێندرێنەوە: ' + escapeHtml(error.message) + '</div>';
+    $("subjectGrid").innerHTML = '<div class="empty-state">نەتوانرا لیستی وانەکان لە سێرڤەری پارێزراو بخوێندرێتەوە: ' + escapeHtml(error.message) + '</div>';
   }
 }
 async function initializeActivation() {
