@@ -455,3 +455,11 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .activation-message{min-height:24px;margin-top:15px;color:var(--teal);font-size:10px;line-height:1.8}
 .activation-message.error{color:#d34b55}
 @media(max-width:560px){.activation-gate{min-height:calc(100vh - 66px)}.activation-card{padding:25px 19px;border-radius:19px}}
+
+.admin-panel{min-height:calc(100vh - 78px);display:grid;place-items:center;padding:24px 14px}
+.admin-card form{display:grid;gap:8px}
+.admin-card form label{margin-top:8px}
+.admin-card form button{margin-top:10px}
+.admin-card>button{width:100%;margin-top:12px;padding:13px;color:white;background:var(--primary);border:0;border-radius:12px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.admin-card>button:disabled{opacity:.6;cursor:wait}
+.admin-code-result{margin-top:16px;padding:17px 10px;direction:ltr;text-align:center;letter-spacing:2px;font-size:20px;font-weight:900;color:var(--primary);background:var(--surface-tint);border:1px dashed var(--primary);border-radius:13px;user-select:all}
