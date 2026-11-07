@@ -298,10 +298,14 @@ function renderSubjects() {
 function makeBunnyEmbed(value) {
  const raw = String(value || "").trim();
  if (!raw) return "";
- const match = raw.match(/\\/embed\\/387939\\/([^/?#]+)/i);
- const id = match ? match[1] : raw.split(/[?#]/)[0].replace(/\\/+$/, "").split("/").pop();
+ const marker = "https://iframe.mediadelivery.net/embed/387939/";
+ const markerIndex = raw.indexOf(marker);
+ const clean = raw.split(/[?#]/)[0];
+ const id = markerIndex >= 0
+  ? raw.slice(markerIndex + marker.length).split(/[/?#]/)[0]
+  : clean.split("/").pop();
  if (!id) return "";
- return "https://iframe.mediadelivery.net/embed/387939/" + encodeURIComponent(id) + "?autoplay=true&loop=false&muted=false&preload=true&responsive=true";
+ return marker + encodeURIComponent(id) + "?autoplay=true&loop=false&muted=false&preload=true&responsive=true";
 }
 async function loadSubjectLessons(subject) {
  const sourceUrl = String(subjectSources[subject.id] || "").trim();
