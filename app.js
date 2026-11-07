@@ -111,31 +111,21 @@ function normalizeJson(parsed) {
   if (parsed && Array.isArray(parsed.lessons)) return parsed.lessons;
   throw new Error('فۆرماتی JSON ناسراو نییە؛ پێویستە details یان lessons ـی تێدا بێت.');
 }
-async function listJsonFiles(path = "data") {
-  const url = `https://api.github.com/repos/quranofficial/biology-course-12/contents/${path}?ref=main`;
-  const response = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
-  if (!response.ok) throw new Error(`نەتوانرا فۆڵدەری ${path} بخوێندرێتەوە (HTTP ${response.status}).`);
-  const entries = await response.json();
-  if (!Array.isArray(entries)) throw new Error(`ناوەڕۆکی ${path} فۆڵدەر نییە.`);
-  const nested = await Promise.all(entries.filter(x => x.type === "dir").map(x => listJsonFiles(x.path)));
-  return [
-    ...entries.filter(x => x.type === "file" && x.name.toLowerCase().endsWith(".json")),
-    ...nested.flat()
-  ];
-}
-
 async function loadAllJsonLessons() {
-  const files = await listJsonFiles("data");
-  if (!files.length) throw new Error("هیچ فایلێکی JSON لە فۆڵدەری data نەدۆزرایەوە.");
-  const results = await Promise.all(files.map(async file => {
+  const manifestResponse = await fetch("data/index.json", { cache: "no-store" });
+  if (!manifestResponse.ok) throw new Error(`نەتوانرا لیستی JSON ـەکان بخوێندرێتەوە (HTTP ${manifestResponse.status}).`);
+  const files = await manifestResponse.json();
+  if (!Array.isArray(files) || !files.length) throw new Error("هیچ فایلێکی JSON لە فۆڵدەری data نەدۆزرایەوە.");
+
+  const results = await Promise.all(files.map(async path => {
     try {
-      const response = await fetch(file.download_url);
+      const encodedPath = path.split("/").map(encodeURIComponent).join("/");
+      const response = await fetch(`data/${encodedPath}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const parsed = await response.json();
-      const items = normalizeJson(parsed);
-      return { path: file.path, items };
+      return { path, items: normalizeJson(parsed) };
     } catch (error) {
-      return { path: file.path, error: error.message, items: [] };
+      return { path, error: error.message, items: [] };
     }
   }));
 
