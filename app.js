@@ -280,7 +280,7 @@ function filesForSubject(subject) {
 function renderSubjects() {
  const grid = $("subjectGrid");
  grid.innerHTML = SUBJECTS.map(subject => {
-  const files = filesForSubject(subject), hasRemote = typeof subjectSources[subject.id] === "string" && subjectSources[subject.id].trim().length > 0, available = hasRemote || files.length > 0;
+  const files = filesForSubject(subject), available = files.length > 0;
   return '<button class="subject-card ' + (available ? "is-open" : "is-locked") + '" data-subject="' + subject.id + '" ' + (available ? "" : "disabled") + '>' +
    '<span class="subject-icon">' + subject.icon + '</span><span class="subject-status">' + (available ? "بەردەستە" : "بەردەست نییە") + '</span>' +
    '<strong>' + subject.name + '</strong><small>' + (available ? toDigits(files.length) + " فایل دۆزرایەوە" : "فایلی JSON لە data نییە") + '</small>' +
