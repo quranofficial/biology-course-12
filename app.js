@@ -54,7 +54,7 @@ $("generateCodeButton").addEventListener("click", async () => {
       body:JSON.stringify({action:"create_code"})
     });
     const data = await response.json();
-    if (!response.ok || !data.code) throw new Error(data.error || "نەتوانرا کۆد دروست بکرێت.");
+    if (!response.ok || !data.code) throw new Error(data.error || data.message || ("HTTP " + response.status + " — " + JSON.stringify(data)));
     $("adminCodeResult").hidden = false;
     $("adminCodeResult").textContent = data.code;
     $("adminMessage").textContent = "کۆدەکە دروست کرا. تەنها ئەم جارە پیشان دەدرێت؛ لای خۆت بیپارێزە.";
