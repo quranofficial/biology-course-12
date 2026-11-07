@@ -262,11 +262,8 @@ function normalizeJson(parsed) {
   throw new Error('فۆرماتی JSON ناسراو نییە؛ پێویستە details یان lessons ـی تێدا بێت.');
 }
 async function readManifest() {
- const filesResponse = await fetch("data/index.json", {cache:"no-store"});
- if (filesResponse.ok) {
-  const files = await filesResponse.json();
-  if (Array.isArray(files)) manifestFiles = files.filter(x => typeof x === "string" && x.toLowerCase().endsWith(".json"));
- }
+ // تەنها ناوی فایلەکان لێرەیە؛ ناوەڕۆکی JSON لە Private Storage ـەوە وەردەگیرێت.
+ manifestFiles = ["زیندەزانی.json", "کوردی.json", "بیرکاری.json"];
  return manifestFiles;
 }
 function filesForSubject(subject) {
@@ -302,13 +299,16 @@ function makeBunnyEmbed(value) {
 }
 async function loadSubjectLessons(subject) {
  const files = filesForSubject(subject);
- if (!files.length) throw new Error("فایلی JSON بۆ ئەم بابەتە لە data نییە.");
+ if (!files.length) throw new Error("فایلی JSON بۆ ئەم بابەتە لە Private Storage نییە.");
  const results = await Promise.all(files.map(async path => {
   try {
-   const encoded = path.split("/").map(encodeURIComponent).join("/");
-   const response = await fetch("data/" + encoded, {cache:"no-store"});
-   if (!response.ok) throw new Error("HTTP " + response.status);
-   return {path:path,items:normalizeJson(await response.json())};
+   const payload = await activationRequest({
+    action:"get_lesson_json",
+    device_token:getDeviceToken(),
+    filename:path.split("/").pop()
+   });
+   if (!payload || !payload.data) throw new Error("داتای وانەکان بەردەست نییە.");
+   return {path:path,items:normalizeJson(payload.data)};
   } catch(error) { return {path:path,error:error.message,items:[]}; }
  }));
  const loaded=[], usedIds=new Set();
