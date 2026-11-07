@@ -23,6 +23,24 @@
       <div id="activationMessage" class="activation-message" role="status" aria-live="polite">پشکنینی چالاکبوون...</div>
     </section>
   </main>
+  <main id="adminPanel" class="admin-panel" hidden>
+    <section class="activation-card admin-card">
+      <div class="activation-mark">🛠️</div>
+      <span class="eyebrow">بەڕێوەبەری کۆرس</span>
+      <h1>دروستکردنی کۆدی چالاککردن</h1>
+      <p>تەنها بەڕێوەبەری ڕێگەپێدراو دەتوانێت کۆدی نوێ دروست بکات.</p>
+      <form id="adminLoginForm">
+        <label for="adminEmail">ئیمەیڵی بەڕێوەبەر</label>
+        <input id="adminEmail" type="email" autocomplete="username" required>
+        <label for="adminPassword">وشەی نهێنی</label>
+        <input id="adminPassword" type="password" autocomplete="current-password" required>
+        <button id="adminLoginButton" type="submit">چوونەژوورەوە</button>
+      </form>
+      <button id="generateCodeButton" type="button" hidden>دروستکردنی کۆدی نوێ</button>
+      <div id="adminCodeResult" class="admin-code-result" hidden></div>
+      <div id="adminMessage" class="activation-message" role="status" aria-live="polite"></div>
+    </section>
+  </main>
   <header class="topbar">
     <a class="brand" href="#" aria-label="سەرەتا">
       <span class="brand-mark">ز</span>
