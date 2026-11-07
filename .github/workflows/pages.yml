@@ -25,12 +25,13 @@ jobs:
         uses: actions/checkout@v4
       - name: Prepare website files
         run: |
-          mkdir -p public
-          base64 -d biology_course_website.zip.b64 > biology_course_website.zip
-          unzip -t biology_course_website.zip
-          unzip -o biology_course_website.zip -d extracted
-          cp -R extracted/biology_course_website/. public/
+          mkdir -p public/data
+          cp index.html styles.css app.js public/
+          cp data/lessons.json public/data/
           touch public/.nojekyll
+          test -s public/index.html
+          test -s public/app.js
+          test -s public/data/lessons.json
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
