@@ -111,38 +111,72 @@ function normalizeJson(parsed) {
   if (parsed && Array.isArray(parsed.lessons)) return parsed.lessons;
   throw new Error('فۆرماتی JSON ناسراو نییە؛ پێویستە details یان lessons ـی تێدا بێت.');
 }
-$("jsonInput").addEventListener("change", async e => {
-  const file = e.target.files?.[0]; if (!file) return;
-  try {
-    const parsed = JSON.parse(await file.text());
-    const incoming = normalizeJson(parsed);
-    if (!incoming.length) throw new Error("هیچ وانەیەک لە JSON ـەکەدا نییە.");
-    const map = new Map(lessons.map(x => [String(x.id), x]));
-    incoming.forEach((x,i) => {
-      if (!x || typeof x !== "object") return;
-      const id = x.id ?? `new-${Date.now()}-${i}`;
-      map.set(String(id), {...(map.get(String(id))||{}), ...x, id});
-    });
-    lessons = [...map.values()];
-    renderChapters(); renderLessons(); updateProgress();
-    showToast(`${toDigits(incoming.length)} وانە زیاد/نوێکرانەوە.`);
-  } catch(err) { showToast("هەڵە: " + err.message); }
-  e.target.value = "";
-});
+async function listJsonFiles(path = "data") {
+  const url = `https://api.github.com/repos/quranofficial/biology-course-12/contents/${path}?ref=main`;
+  const response = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+  if (!response.ok) throw new Error(`نەتوانرا فۆڵدەری ${path} بخوێندرێتەوە (HTTP ${response.status}).`);
+  const entries = await response.json();
+  if (!Array.isArray(entries)) throw new Error(`ناوەڕۆکی ${path} فۆڵدەر نییە.`);
+  const nested = await Promise.all(entries.filter(x => x.type === "dir").map(x => listJsonFiles(x.path)));
+  return [
+    ...entries.filter(x => x.type === "file" && x.name.toLowerCase().endsWith(".json")),
+    ...nested.flat()
+  ];
+}
+
+async function loadAllJsonLessons() {
+  const files = await listJsonFiles("data");
+  if (!files.length) throw new Error("هیچ فایلێکی JSON لە فۆڵدەری data نەدۆزرایەوە.");
+  const results = await Promise.all(files.map(async file => {
+    try {
+      const response = await fetch(file.download_url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const parsed = await response.json();
+      const items = normalizeJson(parsed);
+      return { path: file.path, items };
+    } catch (error) {
+      return { path: file.path, error: error.message, items: [] };
+    }
+  }));
+
+  const loaded = [];
+  const usedIds = new Set();
+  for (const result of results.sort((a, b) => a.path.localeCompare(b.path))) {
+    for (const [index, item] of result.items.entries()) {
+      if (!item || typeof item !== "object") continue;
+      const originalId = item.id ?? `${result.path}-${index + 1}`;
+      let id = String(originalId);
+      if (usedIds.has(id)) id = `${result.path}::${id}`;
+      let suffix = 2;
+      while (usedIds.has(id)) id = `${result.path}::${originalId}-${suffix++}`;
+      usedIds.add(id);
+      loaded.push({ ...item, id });
+    }
+  }
+  const failed = results.filter(x => x.error);
+  if (!loaded.length) {
+    const detail = failed.map(x => `${x.path}: ${x.error}`).join(" | ");
+    throw new Error(detail || "هیچ وانەیەکی دروست لە فایلە JSON ـەکاندا نەدۆزرایەوە.");
+  }
+  return { lessons: sorted(loaded), files: files.length, failed };
+}
 
 async function init() {
   try {
-    const response = await fetch("data/lessons.json");
-    if (!response.ok) throw new Error("نەتوانرا فایلەکە بخوێندرێتەوە.");
-    const parsed = await response.json();
-    lessons = sorted(normalizeJson(parsed));
     $("year").textContent = new Date().getFullYear();
+    const result = await loadAllJsonLessons();
+    lessons = result.lessons;
     $("courseTitle").textContent = lessons[0]?.unit?.title || lessons[0]?.chapter?.split(" ")[0] || "زیندەزانی ١٢";
     $("welcomeTitle").textContent = `وانەکانی ${$("courseTitle").textContent}`;
     renderChapters(); renderLessons(); updateProgress();
     if (lessons.length) selectLesson(lessons[0].id);
+    const failedText = result.failed.length
+      ? `؛ ${toDigits(result.failed.length)} فایل خوێندرایەوە بە هەڵە`
+      : "";
+    showToast(`${toDigits(lessons.length)} وانە لە ${toDigits(result.files)} فایل بارکران${failedText}.`);
+    if (result.failed.length) console.warn("JSON files could not be loaded:", result.failed);
   } catch(err) {
-    $("lessonList").innerHTML = `<div class="empty-state">هەڵە لە خوێندنەوەی JSON: ${escapeHtml(err.message)}<br>پێویستە وێبسایتەکە لە ڕێگەی web server ـەوە بکەیتەوە.</div>`;
+    $("lessonList").innerHTML = `<div class="empty-state">هەڵە لە بارکردنی JSON ـەکان: ${escapeHtml(err.message)}<br>دڵنیابە وێبسایتەکە لە GitHub Pages کراوەتەوە و فۆڵدەری data بەردەستە.</div>`;
   }
 }
 init();
