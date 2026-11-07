@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="پلاتفۆرمی خوێندنی زیندەزانی ١٢">
+  <title>پلاتفۆرمی وانەکان | زیندەزانی ١٢</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="سەرەتا">
+      <span class="brand-mark">ز</span>
+      <span><b>خوێندنگە</b><small>پلاتفۆرمی وانەکان</small></span>
+    </a>
+    <div class="top-actions">
+      <label class="searchbox"><span>⌕</span><input id="searchInput" type="search" placeholder="گەڕان بە ناوی وانە..." autocomplete="off"></label>
+      <button class="icon-btn" id="themeBtn" title="گۆڕینی ڕووکار" aria-label="گۆڕینی ڕووکار">☼</button>
+      <label class="import-btn" for="jsonInput">＋ زیادکردنی JSON</label>
+      <input id="jsonInput" type="file" accept=".json,application/json" hidden>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="course-cover">
+        <div class="cover-icon">🧬</div>
+        <span class="eyebrow">کۆرسی ئێستا</span>
+        <h2 id="courseTitle">زیندەزانی ١٢</h2>
+        <p>وانەکان و ڤیدیۆ فێرکارییەکان</p>
+        <div class="progress-line"><span id="progressBar"></span></div>
+        <small id="progressText">٠ لە ٠ وانە تەواوکراوە</small>
+      </div>
+      <div class="side-heading">بەشەکانی کۆرس</div>
+      <nav id="chapterNav" class="chapter-nav"></nav>
+      <div class="sidebar-foot">
+        <span class="status-dot"></span>
+        <span>داتاکان لەسەر ئامێرەکەت دەپارێزرێن</span>
+      </div>
+    </aside>
+
+    <section class="content">
+      <div class="welcome-row">
+        <div>
+          <div class="eyebrow">بەخێربێیت بۆ پلاتفۆرمی خوێندن</div>
+          <h1 id="welcomeTitle">وانەکانی زیندەزانی</h1>
+          <p id="welcomeSub">وانەی دڵخوازت هەڵبژێرە و دەست بە خوێندن بکە.</p>
+        </div>
+        <div class="stats">
+          <div class="stat-card"><strong id="totalCount">٠</strong><span>کۆی وانەکان</span></div>
+          <div class="stat-card"><strong id="doneCount">٠</strong><span>تەواوکراو</span></div>
+        </div>
+      </div>
+
+      <section class="player-card">
+        <div class="player-head">
+          <div><span class="live-dot"></span><span>پەخشکردنی وانە</span></div>
+          <span class="player-label" id="playerLabel">هیچ وانەیەک هەڵنەبژێردراوە</span>
+        </div>
+        <div class="video-wrap" id="videoWrap">
+          <div class="player-placeholder">
+            <div class="play-symbol">▶</div>
+            <h2>ڤیدیۆی وانەکە لێرە پیشان دەدرێت</h2>
+            <p>لە لیستی وانەکان وانەیەک هەڵبژێرە</p>
+          </div>
+        </div>
+        <div class="player-info">
+          <div><span class="eyebrow">وانەی هەڵبژێردراو</span><h2 id="currentTitle">وانەیەک هەڵبژێرە</h2><p id="currentDescription">زانیاریی وانەکە لێرە دەردەکەوێت.</p></div>
+          <button id="completeBtn" class="complete-btn" disabled>✓ تەواو بوو</button>
+        </div>
+      </section>
+
+      <div class="section-heading">
+        <div><span class="eyebrow">ناوەڕۆکی کۆرس</span><h2>لیستی وانەکان</h2></div>
+        <select id="chapterFilter" aria-label="فلتەرکردن بە بەش"><option value="all">هەموو بەشەکان</option></select>
+      </div>
+      <div id="lessonList" class="lesson-list"></div>
+      <div id="emptyState" class="empty-state" hidden>هیچ وانەیەک نەدۆزرایەوە.</div>
+      <footer>© <span id="year"></span> پلاتفۆرمی خوێندن · هەموو مافەکان پارێزراون</footer>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
