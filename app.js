@@ -141,6 +141,7 @@ $("activationForm").addEventListener("submit", async event => {
 
 let lessons = [];
 let manifestFiles = [];
+let subjectSources = {};
 const SUBJECTS = [
  {id:"biology",name:"زیندەزانی",icon:"🧬",aliases:["زیندەزانی","biology","biology-12","lessons","response_body_modified"]},
  {id:"chemistry",name:"کیمیا",icon:"⚗️",aliases:["کیمیا","chemistry"]},
@@ -262,11 +263,17 @@ function normalizeJson(parsed) {
   throw new Error('فۆرماتی JSON ناسراو نییە؛ پێویستە details یان lessons ـی تێدا بێت.');
 }
 async function readManifest() {
- const response = await fetch("data/index.json", {cache:"no-store"});
- if (!response.ok) throw new Error("نەتوانرا لیستی فایلەکان بخوێندرایەوە (HTTP " + response.status + ").");
- const files = await response.json();
- if (!Array.isArray(files)) throw new Error("فۆرماتی لیستی فایلەکان دروست نییە.");
- manifestFiles = files.filter(x => typeof x === "string" && x.toLowerCase().endsWith(".json"));
+ const [filesResponse, sourcesResponse] = await Promise.all([
+  fetch("data/index.json", {cache:"no-store"}),
+  fetch("data/subject-sources.json", {cache:"no-store"})
+ ]);
+ if (filesResponse.ok) {
+  const files = await filesResponse.json();
+  if (Array.isArray(files)) manifestFiles = files.filter(x => typeof x === "string" && x.toLowerCase().endsWith(".json"));
+ }
+ if (!sourcesResponse.ok) throw new Error("نەتوانرا data/subject-sources.json بخوێندرێتەوە (HTTP " + sourcesResponse.status + ").");
+ subjectSources = await sourcesResponse.json();
+ if (!subjectSources || typeof subjectSources !== "object" || Array.isArray(subjectSources)) throw new Error("فۆرماتی subject-sources.json دروست نییە.");
  return manifestFiles;
 }
 function filesForSubject(subject) {
@@ -280,7 +287,7 @@ function filesForSubject(subject) {
 function renderSubjects() {
  const grid = $("subjectGrid");
  grid.innerHTML = SUBJECTS.map(subject => {
-  const files = filesForSubject(subject), available = files.length > 0;
+  const files = filesForSubject(subject), hasRemote = typeof subjectSources[subject.id] === "string" && subjectSources[subject.id].trim().length > 0, available = hasRemote || files.length > 0;
   return '<button class="subject-card ' + (available ? "is-open" : "is-locked") + '" data-subject="' + subject.id + '" ' + (available ? "" : "disabled") + '>' +
    '<span class="subject-icon">' + subject.icon + '</span><span class="subject-status">' + (available ? "بەردەستە" : "بەردەست نییە") + '</span>' +
    '<strong>' + subject.name + '</strong><small>' + (available ? toDigits(files.length) + " فایل دۆزرایەوە" : "فایلی JSON لە data نییە") + '</small>' +
@@ -288,9 +295,30 @@ function renderSubjects() {
  }).join("");
  grid.querySelectorAll(".subject-card.is-open").forEach(button => button.addEventListener("click", () => openSubject(button.dataset.subject)));
 }
+function makeBunnyEmbed(value) {
+ const raw = String(value || "").trim();
+ if (!raw) return "";
+ const match = raw.match(/\\/embed\\/387939\\/([^/?#]+)/i);
+ const id = match ? match[1] : raw.split(/[?#]/)[0].replace(/\\/+$/, "").split("/").pop();
+ if (!id) return "";
+ return "https://iframe.mediadelivery.net/embed/387939/" + encodeURIComponent(id) + "?autoplay=true&loop=false&muted=false&preload=true&responsive=true";
+}
 async function loadSubjectLessons(subject) {
+ const sourceUrl = String(subjectSources[subject.id] || "").trim();
+ if (sourceUrl) {
+  const response = await fetch(sourceUrl, {cache:"no-store"});
+  if (!response.ok) throw new Error("نەتوانرا API ـی " + subject.name + " بخوێندرێتەوە (HTTP " + response.status + ").");
+  const items = normalizeJson(await response.json());
+  const remoteLessons = items.filter(item => item && typeof item === "object").map((item,index) => ({
+   ...item,
+   id: item.id ?? (subject.id + "-" + (index + 1)),
+   link: makeBunnyEmbed(item.link)
+  }));
+  if (!remoteLessons.length) throw new Error("هیچ وانەیەک لە API ـی " + subject.name + " نەدۆزرایەوە.");
+  return {lessons:sorted(remoteLessons),files:1,failed:[]};
+ }
  const files = filesForSubject(subject);
- if (!files.length) throw new Error("هیچ فایلێکی JSON بۆ ئەم بابەتە بەردەست نییە.");
+ if (!files.length) throw new Error("لینکی JSON بۆ ئەم بابەتە لە data/subject-sources.json دانەنراوە.");
  const results = await Promise.all(files.map(async path => {
   try {
    const encoded = path.split("/").map(encodeURIComponent).join("/");
