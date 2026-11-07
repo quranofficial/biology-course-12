@@ -26,6 +26,8 @@ jobs:
       - name: Prepare website files
         run: |
           mkdir -p public
+          base64 -d biology_course_website.zip.b64 > biology_course_website.zip
+          unzip -t biology_course_website.zip
           unzip -o biology_course_website.zip -d extracted
           cp -R extracted/biology_course_website/. public/
           touch public/.nojekyll
