@@ -9,6 +9,20 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <main id="activationGate" class="activation-gate">
+    <section class="activation-card">
+      <div class="activation-mark">🔐</div>
+      <span class="eyebrow">پاراستنی کۆرس</span>
+      <h1>چالاککردنی دەستگەیشتن</h1>
+      <p>بۆ چوونەژوورەوە، کۆدی چالاککردنی تایبەت بە ئامێرەکەت بنووسە.</p>
+      <form id="activationForm">
+        <label for="activationCode">کۆدی چالاککردن</label>
+        <input id="activationCode" type="text" inputmode="text" autocomplete="one-time-code" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" maxlength="24" required>
+        <button id="activationButton" type="submit">چالاککردن</button>
+      </form>
+      <div id="activationMessage" class="activation-message" role="status" aria-live="polite">پشکنینی چالاکبوون...</div>
+    </section>
+  </main>
   <header class="topbar">
     <a class="brand" href="#" aria-label="سەرەتا">
       <span class="brand-mark">ز</span>
