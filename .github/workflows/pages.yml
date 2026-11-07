@@ -23,14 +23,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Prepare website files
+      - name: Prepare website files and JSON manifest
         run: |
           mkdir -p public/data
           cp index.html styles.css app.js public/
-          cp data/lessons.json public/data/
+          cp -R data/. public/data/
+          python3 - <<'PY'
+          import json
+          import os
+
+          root = "public/data"
+          files = []
+          for current, _, names in os.walk(root):
+              for name in names:
+                  if name.lower().endswith(".json") and name.lower() != "index.json":
+                      rel = os.path.relpath(os.path.join(current, name), root)
+                      files.append(rel.replace(os.sep, "/"))
+          files.sort()
+          with open(os.path.join(root, "index.json"), "w", encoding="utf-8") as f:
+              json.dump(files, f, ensure_ascii=False, indent=2)
+          print(f"Generated manifest with {len(files)} JSON files")
+          PY
           touch public/.nojekyll
           test -s public/index.html
           test -s public/app.js
+          test -s public/data/index.json
           test -s public/data/lessons.json
       - name: Configure Pages
         uses: actions/configure-pages@v5
