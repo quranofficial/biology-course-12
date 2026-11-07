@@ -1,7 +1,70 @@
 const SUPABASE_FUNCTION_URL = "https://nyflqakexqbsujykjkam.supabase.co/functions/v1/smart-handler";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zHGmZTaVOdnGiXJuAZmIdw_K0e8BjlS";
 
-function getDeviceToken() {
+
+let adminAccessToken = null;
+async function initializeAdminPanel() {
+  $("activationGate").hidden = true;
+  $("subjectHome").hidden = true;
+  $("courseLayout").hidden = true;
+  $("adminPanel").hidden = false;
+}
+$("adminLoginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = $("adminLoginButton");
+  button.disabled = true;
+  $("adminMessage").textContent = "چوونەژوورەوە پشکنین دەکرێت...";
+  try {
+    const response = await fetch("https://nyflqakexqbsujykjkam.supabase.co/auth/v1/token?grant_type=password", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},
+      body:JSON.stringify({
+        email:$("adminEmail").value.trim(),
+        password:$("adminPassword").value
+      })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.access_token) throw new Error("ئیمەیڵ یان وشەی نهێنی هەڵەیە.");
+    adminAccessToken = data.access_token;
+    $("adminPassword").value = "";
+    $("adminLoginForm").hidden = true;
+    $("generateCodeButton").hidden = false;
+    $("adminMessage").textContent = "چوونەژوورەوە سەرکەوتوو بوو.";
+  } catch(error) {
+    $("adminMessage").textContent = error.message || "هەڵەیەک ڕوویدا.";
+    $("adminMessage").classList.add("error");
+  } finally {
+    button.disabled = false;
+  }
+});
+$("generateCodeButton").addEventListener("click", async () => {
+  const button = $("generateCodeButton");
+  button.disabled = true;
+  $("adminMessage").classList.remove("error");
+  $("adminMessage").textContent = "کۆدی نوێ دروست دەکرێت...";
+  try {
+    const response = await fetch(SUPABASE_FUNCTION_URL, {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "apikey":SUPABASE_PUBLISHABLE_KEY,
+        "Authorization":"Bearer " + adminAccessToken
+      },
+      body:JSON.stringify({action:"create_code"})
+    });
+    const data = await response.json();
+    if (!response.ok || !data.code) throw new Error(data.error || "نەتوانرا کۆد دروست بکرێت.");
+    $("adminCodeResult").hidden = false;
+    $("adminCodeResult").textContent = data.code;
+    $("adminMessage").textContent = "کۆدەکە دروست کرا. تەنها ئەم جارە پیشان دەدرێت؛ لای خۆت بیپارێزە.";
+  } catch(error) {
+    $("adminMessage").textContent = error.message || "هەڵەیەک ڕوویدا.";
+    $("adminMessage").classList.add("error");
+  } finally {
+    button.disabled = false;
+  }
+});
+\nfunction getDeviceToken() {
   let token = localStorage.getItem("biology_device_token");
   if (!token) {
     token = crypto.randomUUID();
@@ -266,6 +329,10 @@ $("backSubjects").addEventListener("click",()=>{$("courseLayout").hidden=true;$(
 async function init() {
  $("year").textContent=new Date().getFullYear();
  $("homeYear").textContent=new Date().getFullYear();
+ if (new URLSearchParams(window.location.search).get("admin") === "1") {
+   await initializeAdminPanel();
+   return;
+ }
  await initializeActivation();
 }
 init();
