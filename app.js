@@ -1,3 +1,4 @@
+const $ = (id) => document.getElementById(id);
 const SUPABASE_FUNCTION_URL = "https://nyflqakexqbsujykjkam.supabase.co/functions/v1/smart-handler";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zHGmZTaVOdnGiXJuAZmIdw_K0e8BjlS";
 
@@ -137,7 +138,6 @@ $("activationForm").addEventListener("submit", async event => {
   }
 });
 
-const $ = (id) => document.getElementById(id);
 let lessons = [];
 let manifestFiles = [];
 const SUBJECTS = [
