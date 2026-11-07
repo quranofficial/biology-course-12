@@ -65,7 +65,8 @@ $("generateCodeButton").addEventListener("click", async () => {
     button.disabled = false;
   }
 });
-\nfunction getDeviceToken() {
+
+function getDeviceToken() {
   let token = localStorage.getItem("biology_device_token");
   if (!token) {
     token = crypto.randomUUID();
