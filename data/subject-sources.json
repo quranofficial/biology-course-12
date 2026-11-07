@@ -1,0 +1,9 @@
+{
+  "biology": "https://zhyar-school.com/api/v2/lessons/getLessons?course=11",
+  "kurdish": "https://zhyar-school.com/api/v2/lessons/getLessons?course=21",
+  "math": "https://zhyar-school.com/api/v2/lessons/getLessons?course=3",
+  "chemistry": "",
+  "physics": "",
+  "arabic": "",
+  "english": ""
+}
