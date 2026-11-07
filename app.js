@@ -1,5 +1,15 @@
 const $ = (id) => document.getElementById(id);
 let lessons = [];
+let manifestFiles = [];
+const SUBJECTS = [
+ {id:"biology",name:"زیندەزانی",icon:"🧬",aliases:["زیندەزانی","biology","biology-12","lessons","response_body_modified"]},
+ {id:"chemistry",name:"کیمیا",icon:"⚗️",aliases:["کیمیا","chemistry"]},
+ {id:"physics",name:"فیزیا",icon:"⚛️",aliases:["فیزیا","physics"]},
+ {id:"math",name:"بیرکاری",icon:"📐",aliases:["بیرکاری","math","mathematics"]},
+ {id:"kurdish",name:"کوردی",icon:"📚",aliases:["کوردی","kurdish"]},
+ {id:"arabic",name:"عەرەبی",icon:"🖋️",aliases:["عەرەبی","arabic"]},
+ {id:"english",name:"ئینگلیزی",icon:"🔤",aliases:["ئینگلیزی","english"]}
+];
 let selectedId = null;
 let activeChapter = "all";
 let searchTerm = "";
@@ -111,62 +121,76 @@ function normalizeJson(parsed) {
   if (parsed && Array.isArray(parsed.lessons)) return parsed.lessons;
   throw new Error('فۆرماتی JSON ناسراو نییە؛ پێویستە details یان lessons ـی تێدا بێت.');
 }
-async function loadAllJsonLessons() {
-  const manifestResponse = await fetch("data/index.json", { cache: "no-store" });
-  if (!manifestResponse.ok) throw new Error(`نەتوانرا لیستی JSON ـەکان بخوێندرێتەوە (HTTP ${manifestResponse.status}).`);
-  const files = await manifestResponse.json();
-  if (!Array.isArray(files) || !files.length) throw new Error("هیچ فایلێکی JSON لە فۆڵدەری data نەدۆزرایەوە.");
-
-  const results = await Promise.all(files.map(async path => {
-    try {
-      const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-      const response = await fetch(`data/${encodedPath}`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const parsed = await response.json();
-      return { path, items: normalizeJson(parsed) };
-    } catch (error) {
-      return { path, error: error.message, items: [] };
-    }
-  }));
-
-  const loaded = [];
-  const usedIds = new Set();
-  for (const result of results.sort((a, b) => a.path.localeCompare(b.path))) {
-    for (const [index, item] of result.items.entries()) {
-      if (!item || typeof item !== "object") continue;
-      const originalId = item.id ?? `${result.path}-${index + 1}`;
-      let id = String(originalId);
-      if (usedIds.has(id)) id = `${result.path}::${id}`;
-      let suffix = 2;
-      while (usedIds.has(id)) id = `${result.path}::${originalId}-${suffix++}`;
-      usedIds.add(id);
-      loaded.push({ ...item, id });
-    }
-  }
-  const failed = results.filter(x => x.error);
-  if (!loaded.length) {
-    const detail = failed.map(x => `${x.path}: ${x.error}`).join(" | ");
-    throw new Error(detail || "هیچ وانەیەکی دروست لە فایلە JSON ـەکاندا نەدۆزرایەوە.");
-  }
-  return { lessons: sorted(loaded), files: files.length, failed };
+async function readManifest() {
+ const response = await fetch("data/index.json", {cache:"no-store"});
+ if (!response.ok) throw new Error("نەتوانرا لیستی فایلەکان بخوێندرایەوە (HTTP " + response.status + ").");
+ const files = await response.json();
+ if (!Array.isArray(files)) throw new Error("فۆرماتی لیستی فایلەکان دروست نییە.");
+ manifestFiles = files.filter(x => typeof x === "string" && x.toLowerCase().endsWith(".json"));
+ return manifestFiles;
 }
-
-async function init() {
+function filesForSubject(subject) {
+ const names = manifestFiles.map(path => ({path:path,base:path.split("/").pop().replace(/\.json$/i,"").toLocaleLowerCase()}));
+ if (subject.id === "biology") {
+  const exact = names.filter(x => subject.aliases.some(alias => x.base === alias.toLocaleLowerCase()));
+  return (exact.length ? exact : names).map(x => x.path);
+ }
+ return names.filter(x => subject.aliases.some(alias => x.base === alias.toLocaleLowerCase())).map(x => x.path);
+}
+function renderSubjects() {
+ const grid = $("subjectGrid");
+ grid.innerHTML = SUBJECTS.map(subject => {
+  const files = filesForSubject(subject), available = files.length > 0;
+  return '<button class="subject-card ' + (available ? "is-open" : "is-locked") + '" data-subject="' + subject.id + '" ' + (available ? "" : "disabled") + '>' +
+   '<span class="subject-icon">' + subject.icon + '</span><span class="subject-status">' + (available ? "بەردەستە" : "بەردەست نییە") + '</span>' +
+   '<strong>' + subject.name + '</strong><small>' + (available ? toDigits(files.length) + " فایل دۆزرایەوە" : "فایلی JSON لە data نییە") + '</small>' +
+   '<span class="subject-action">' + (available ? "چوونە ژوورەوە ←" : "🔒 داخراوە") + '</span></button>';
+ }).join("");
+ grid.querySelectorAll(".subject-card.is-open").forEach(button => button.addEventListener("click", () => openSubject(button.dataset.subject)));
+}
+async function loadSubjectLessons(subject) {
+ const files = filesForSubject(subject);
+ if (!files.length) throw new Error("هیچ فایلێکی JSON بۆ ئەم بابەتە بەردەست نییە.");
+ const results = await Promise.all(files.map(async path => {
   try {
-    $("year").textContent = new Date().getFullYear();
-    const result = await loadAllJsonLessons();
-    lessons = result.lessons;
-    $("courseTitle").textContent = lessons[0]?.unit?.title || lessons[0]?.chapter?.split(" ")[0] || "زیندەزانی ١٢";
-    $("welcomeTitle").textContent = `وانەکانی ${$("courseTitle").textContent}`;
-    renderChapters(); renderLessons(); updateProgress();
-    if (lessons.length) selectLesson(lessons[0].id);
-    const failedText = result.failed.length
-      ? `؛ ${toDigits(result.failed.length)} فایل خوێندرایەوە بە هەڵە`
-      : "";
-    showToast(`${toDigits(lessons.length)} وانە لە ${toDigits(result.files)} فایل بارکران${failedText}.`);
-    if (result.failed.length) console.warn("JSON files could not be loaded:", result.failed);
-  } catch(err) {
-    $("lessonList").innerHTML = `<div class="empty-state">هەڵە لە بارکردنی JSON ـەکان: ${escapeHtml(err.message)}<br>دڵنیابە وێبسایتەکە لە GitHub Pages کراوەتەوە و فۆڵدەری data بەردەستە.</div>`;
+   const encoded = path.split("/").map(encodeURIComponent).join("/");
+   const response = await fetch("data/" + encoded, {cache:"no-store"});
+   if (!response.ok) throw new Error("HTTP " + response.status);
+   return {path:path,items:normalizeJson(await response.json())};
+  } catch(error) { return {path:path,error:error.message,items:[]}; }
+ }));
+ const loaded=[], usedIds=new Set();
+ for (const result of results.sort((x,y)=>x.path.localeCompare(y.path))) {
+  for (const [index,item] of result.items.entries()) {
+   if (!item || typeof item !== "object") continue;
+   const originalId=item.id ?? (result.path+"-"+(index+1)); let id=String(originalId);
+   if (usedIds.has(id)) id=result.path+"::"+id;
+   let suffix=2; while(usedIds.has(id)) id=result.path+"::"+originalId+"-"+(suffix++);
+   usedIds.add(id); loaded.push({...item,id:id});
   }
+ }
+ const failed=results.filter(x=>x.error);
+ if (!loaded.length) throw new Error(failed.map(x=>x.path+": "+x.error).join(" | ") || "هیچ وانەیەکی دروست نەدۆزرایەوە.");
+ return {lessons:sorted(loaded),files:files.length,failed:failed};
+}
+async function openSubject(subjectId) {
+ const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject || !filesForSubject(subject).length) return;
+ $("subjectHome").hidden=true; $("courseLayout").hidden=false;
+ $("courseTitle").textContent=subject.name+(subject.id==="biology"?" ١٢":"");
+ $("welcomeTitle").textContent="وانەکانی "+subject.name;
+ $("lessonList").innerHTML='<div class="empty-state">وانەکان بار دەکرێن...</div>';
+ try {
+  const result=await loadSubjectLessons(subject); lessons=result.lessons; activeChapter="all"; selectedId=null;
+  renderChapters(); renderLessons(); updateProgress(); if(lessons.length) selectLesson(lessons[0].id);
+  showToast(toDigits(lessons.length)+" وانە لە "+toDigits(result.files)+" فایل بارکران.");
+  if(result.failed.length) console.warn("JSON files could not be loaded:",result.failed);
+ } catch(error) { $("lessonList").innerHTML='<div class="empty-state">' + escapeHtml(error.message) + '</div>'; }
+}
+$("backSubjects").addEventListener("click",()=>{$("courseLayout").hidden=true;$("subjectHome").hidden=false;window.scrollTo({top:0,behavior:"smooth"});});
+async function init() {
+ $("year").textContent=new Date().getFullYear();
+ $("homeYear").textContent=new Date().getFullYear();
+ try { await readManifest(); renderSubjects(); }
+ catch(error) { $("subjectGrid").innerHTML='<div class="empty-state">نەتوانرا فایلەکانی data بخوێندرێنەوە: ' + escapeHtml(error.message) + '</div>'; }
 }
 init();
