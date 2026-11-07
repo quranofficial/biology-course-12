@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101827">
   <meta name="description" content="پلاتفۆرمی خوێندنی زیندەزانی ١٢">
-  <title>پلاتفۆرمی وانەکان | زیندەزانی ١٢</title>
+  <title>خوێندنگە | پلاتفۆرمی وانەکان</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -20,7 +20,22 @@
     </div>
   </header>
 
-  <main class="layout">
+  <main class="subject-home" id="subjectHome">
+    <section class="home-hero">
+      <div class="hero-orb hero-orb-one"></div><div class="hero-orb hero-orb-two"></div>
+      <div class="hero-content">
+        <span class="hero-kicker">پلاتفۆرمی خوێندنی پۆلی ١٢</span>
+        <h1>بە خۆشییەوە فێر ببە</h1>
+        <p>بابەتی دڵخوازت هەڵبژێرە و گەشتی فێربوون دەست پێ بکە.</p>
+        <div class="hero-meta"><span>٧ بابەتی خوێندن</span><i></i><span>گونجاو بۆ مۆبایل</span></div>
+      </div>
+      <div class="hero-art" aria-hidden="true"><div class="art-ring"></div><div class="art-book">✦</div><span class="art-dot dot-a"></span><span class="art-dot dot-b"></span></div>
+    </section>
+    <div class="subjects-heading"><div><span class="eyebrow">دەستپێکردنی فێربوون</span><h2>بابەتەکان</h2><p>تەنها ئەو بابەتانە دەکرێنەوە کە فایلەکانیان لە data بەردەستن.</p></div><span class="subject-count">٧ بابەت</span></div>
+    <section class="subject-grid" id="subjectGrid" aria-label="بابەتەکانی خوێندن"><div class="subject-loading">بابەتەکان بار دەکرێن...</div></section>
+    <footer class="home-footer">© <span id="homeYear"></span> پلاتفۆرمی خوێندن · هەموو مافەکان پارێزراون</footer>
+  </main>
+  <main class="layout" id="courseLayout" hidden>
     <aside class="sidebar">
       <div class="course-cover">
         <div class="cover-icon">🧬</div>
@@ -40,6 +55,7 @@
 
     <section class="content">
       <div class="welcome-row">
+        <button class="back-subjects" id="backSubjects" type="button">→ گەڕانەوە بۆ بابەتەکان</button>
         <div>
           <div class="eyebrow">بەخێربێیت بۆ پلاتفۆرمی خوێندن</div>
           <h1 id="welcomeTitle">وانەکانی زیندەزانی</h1>
