@@ -9,7 +9,10 @@
   <link rel="stylesheet" href="styles.css?v=20261108-7">
 </head>
 <body>
-  <main id="activationGate" class="activation-gate">
+  <main id="bootSplash" class="boot-splash" role="status" aria-live="polite">
+    <div class="boot-splash-card"><div class="boot-splash-mark">ز</div><div class="boot-spinner"></div><h1>خوێندنگە</h1><p>پشکنینی چالاکبوون و بارکردنی وێبسایت...</p></div>
+  </main>
+  <main id="activationGate" class="activation-gate" hidden>
     <section class="activation-card">
       <div class="activation-mark">🔐</div>
       <span class="eyebrow">پاراستنی کۆرس</span>
@@ -41,7 +44,7 @@
       <div id="adminMessage" class="activation-message" role="status" aria-live="polite"></div>
     </section>
   </main>
-  <header class="topbar">
+  <header class="topbar" id="siteHeader" hidden>
     <a class="brand" href="#" aria-label="سەرەتا">
       <span class="brand-mark">ز</span>
       <span><b>خوێندنگە</b><small>پلاتفۆرمی وانەکان</small></span>
@@ -52,7 +55,7 @@
     </div>
   </header>
 
-  <main class="subject-home" id="subjectHome">
+  <main class="subject-home" id="subjectHome" hidden>
     <section class="home-hero">
       <div class="hero-orb hero-orb-one"></div><div class="hero-orb hero-orb-two"></div>
       <div class="hero-content">
@@ -144,6 +147,6 @@
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js"></script>
-  <script src="app.js?v=20261108-11"></script>
+  <script src="app.js?v=20261108-12"></script>
 </body>
 </html>
