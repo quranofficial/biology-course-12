@@ -214,6 +214,31 @@ function showActivationMessage(message, isError = false) {
   el.textContent = message;
   el.classList.toggle("error", isError);
 }
+function renderLastStudyCard() {
+ const card = $("lastStudyCard");
+ if (!card) return;
+ const subjectId = localStorage.getItem("biology_last_subject") || "";
+ const lessonId = localStorage.getItem("biology_last_lesson_" + subjectId) || "";
+ const subject = SUBJECTS.find(item => item.id === subjectId);
+ if (!subject || !lessonId || !filesForSubject(subject).length) { card.hidden = true; return; }
+ card.hidden = false;
+ $("lastStudySubject").textContent = subject.name;
+ $("lastStudyTitle").textContent = localStorage.getItem("biology_last_title") || "کۆتا وانەی خوێندراو";
+ $("lastStudyChapter").textContent = localStorage.getItem("biology_last_chapter") || "بەردەوام بە لە شوێنی دواوە";
+}
+$("resumeLastStudy").addEventListener("click", async () => {
+ const subjectId = localStorage.getItem("biology_last_subject") || "";
+ const lessonId = localStorage.getItem("biology_last_lesson_" + subjectId) || "";
+ const subject = SUBJECTS.find(item => item.id === subjectId);
+ if (!subject || !lessonId) return;
+ await openSubject(subjectId);
+ const lesson = lessons.find(item => String(item.id) === String(lessonId));
+ if (lesson) {
+  selectLesson(lesson.id);
+  $("lessonPlayerCard").scrollIntoView({behavior:"smooth",block:"start"});
+ } else showToast("کۆتا وانەکە لەم فایلەدا نەدۆزرایەوە.");
+});
+
 async function unlockCourse() {
   $("bootSplash").hidden = true;
   $("siteHeader").hidden = false;
@@ -223,10 +248,7 @@ async function unlockCourse() {
   try {
     await readManifest();
     renderSubjects();
-    const lastSubject = localStorage.getItem("biology_last_subject");
-    if (lastSubject && SUBJECTS.some(item => item.id === lastSubject && filesForSubject(item).length)) {
-      await openSubject(lastSubject);
-    }
+    renderLastStudyCard();
   }
   catch(error) {
     $("subjectGrid").innerHTML = '<div class="empty-state">نەتوانرا لیستی وانەکان لە سێرڤەری پارێزراو بخوێندرێتەوە: ' + escapeHtml(error.message) + '</div>';
@@ -601,7 +623,11 @@ function selectLesson(id) {
   const lesson = lessons.find(x => String(x.id) === String(id));
   if (!lesson) return;
   selectedId = lesson.id;
-  localStorage.setItem("biology_last_lesson_" + (localStorage.getItem("biology_last_subject") || ""), String(lesson.id));
+  const currentSubjectId = localStorage.getItem("biology_last_subject") || "";
+  localStorage.setItem("biology_last_lesson_" + currentSubjectId, String(lesson.id));
+  localStorage.setItem("biology_last_title", getTitle(lesson));
+  localStorage.setItem("biology_last_chapter", getChapter(lesson));
+  renderLastStudyCard();
   const url = makeBunnyEmbed(lesson.link);
   $("playerLabel").textContent = getChapter(lesson);
   $("currentTitle").textContent = getTitle(lesson);
@@ -817,11 +843,12 @@ async function openSubject(subjectId) {
  try {
   const result=await loadSubjectLessons(subject); lessons=result.lessons; activeChapter="all"; selectedId=null;
   renderChapters(); renderLessons(); updateProgress();
-  if(lessons.length) {
-   const savedLessonId = localStorage.getItem("biology_last_lesson_" + subjectId);
-   const resumeLesson = lessons.find(item => String(item.id) === savedLessonId) || lessons[0];
-   selectLesson(resumeLesson.id);
-  }
+  selectedId = null;
+  $("playerLabel").textContent = "هیچ وانەیەک هەڵنەبژێردراوە";
+  $("currentTitle").textContent = "وانەیەک هەڵبژێرە";
+  $("currentDescription").textContent = "لە لیستی وانەکان وانەی دڵخوازت هەڵبژێرە؛ یان لە کۆتا خوێندنەوە بەردەوام بە.";
+  $("completeBtn").disabled = true;
+  $("videoWrap").innerHTML = '<div class="player-placeholder"><div class="play-symbol">▶</div><h2>ڤیدیۆی وانەکە لێرە پیشان دەدرێت</h2><p>لە لیستی وانەکان وانەیەک هەڵبژێرە</p></div>';
   showToast(toDigits(lessons.length)+" وانە لە "+toDigits(result.files)+" فایل بارکران.");
   if(result.failed.length) console.warn("JSON files could not be loaded:",result.failed);
  } catch(error) { $("lessonList").innerHTML='<div class="empty-state">' + escapeHtml(error.message) + '</div>'; }
