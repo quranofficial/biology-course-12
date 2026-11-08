@@ -267,12 +267,14 @@ async function readManifest() {
  return manifestFiles;
 }
 function filesForSubject(subject) {
- const names = manifestFiles.map(path => ({path:path,base:path.split("/").pop().replace(/\.json$/i,"").toLocaleLowerCase()}));
- if (subject.id === "biology") {
-  const exact = names.filter(x => subject.aliases.some(alias => x.base === alias.toLocaleLowerCase()));
-  return (exact.length ? exact : names).map(x => x.path);
- }
- return names.filter(x => subject.aliases.some(alias => x.base === alias.toLocaleLowerCase())).map(x => x.path);
+ const names = manifestFiles.map(path => {
+  const filename = String(path).split("/").pop();
+  return {path:filename,base:filename.replace(/\.json$/i,"").trim().toLowerCase()};
+ });
+ const aliasSet = new Set(subject.aliases.map(alias => String(alias).trim().toLowerCase()));
+ const matches = names.filter(file => aliasSet.has(file.base));
+ if (subject.id === "biology") return (matches.length ? matches : names).map(file => file.path);
+ return matches.map(file => file.path);
 }
 function renderSubjects() {
  const grid = $("subjectGrid");
