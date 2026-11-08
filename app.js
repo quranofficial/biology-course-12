@@ -361,8 +361,8 @@ async function loadYoutubePlaylistVideos(playlist) {
   if (chosen) {
    activeYoutubeVideo[playlist.id] = chosen.videoId;
    localStorage.setItem("biology_youtube_video_" + playlist.id, chosen.videoId);
-   if (youtubePlayer && typeof youtubePlayer.loadVideoById === "function") {
-    youtubePlayer.loadVideoById({videoId:chosen.videoId, startSeconds:readPlaybackTime("youtube",chosen.videoId)});
+   if (youtubePlayer && typeof youtubePlayer.cueVideoById === "function") {
+    youtubePlayer.cueVideoById({videoId:chosen.videoId, startSeconds:readPlaybackTime("youtube",chosen.videoId)});
    } else {
     $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(chosen.videoId) + "?list=" + encodeURIComponent(playlist.id) + "&rel=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
     setTimeout(attachYoutubePlayer, 500);
@@ -395,8 +395,8 @@ function renderYoutubePlaylists(subjectId) {
   localStorage.setItem("biology_youtube_playlist_" + subjectId, String(index));
   const playlist = playlists[index];
   activeYoutubeVideo[playlist.id] = localStorage.getItem("biology_youtube_video_" + playlist.id) || activeYoutubeVideo[playlist.id];
-  if (youtubePlayer && typeof youtubePlayer.loadPlaylist === "function") {
-   youtubePlayer.loadPlaylist({list:playlist.id});
+  if (youtubePlayer && typeof youtubePlayer.cuePlaylist === "function") {
+   youtubePlayer.cuePlaylist({list:playlist.id});
   } else {
    frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
    setTimeout(attachYoutubePlayer, 500);
@@ -421,9 +421,7 @@ function renderYoutubePlaylists(subjectId) {
   if (opening) showPlaylist(selected);
   else {
    saveYoutubePosition();
-   frame.removeAttribute("src");
-   youtubePlayer = null;
-   youtubePlayerFrame = null;
+   if (youtubePlayer && typeof youtubePlayer.pauseVideo === "function") youtubePlayer.pauseVideo();
   }
  };
 }
