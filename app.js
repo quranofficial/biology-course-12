@@ -657,10 +657,10 @@ function renderSubjects() {
  const grid = $("subjectGrid");
  grid.innerHTML = SUBJECTS.map(subject => {
   const files = filesForSubject(subject), available = files.length > 0;
-  return '<button class="subject-card ' + (available ? "is-open" : "is-locked") + '" data-subject="' + subject.id + '" ' + (available ? "" : "disabled") + '>' +
-   '<span class="subject-icon">' + subject.icon + '</span><span class="subject-status">' + (available ? "بەردەستە" : "بەردەست نییە") + '</span>' +
-   '<strong>' + subject.name + '</strong><small>' + (available ? toDigits(files.length) + " فایل دۆزرایەوە" : "فایلی JSON لە data نییە") + '</small>' +
-   '<span class="subject-action">' + (available ? "چوونە ژوورەوە ←" : "🔒 داخراوە") + '</span></button>';
+  return '<button class="subject-card is-open" data-subject="' + subject.id + '">' +
+   '<span class="subject-icon">' + subject.icon + '</span><span class="subject-status">' + (available ? "بەردەستە" : "پرسیارە وەزارییەکان") + '</span>' +
+   '<strong>' + subject.name + '</strong><small>' + (available ? toDigits(files.length) + " فایل دۆزرایەوە" : "پرسیار و وەڵامی وەزاری") + '</small>' +
+   '<span class="subject-action">' + (available ? "چوونە ژوورەوە ←" : "بینینی پرسیارەکان ←") + '</span></button>';
  }).join("");
  grid.querySelectorAll(".subject-card.is-open").forEach(button => button.addEventListener("click", () => openSubject(button.dataset.subject)));
 }
@@ -753,7 +753,7 @@ $("ministryQuestionSearch").addEventListener("input", renderMinistryQuestions);
 $("ministryQuestionYear").addEventListener("change", renderMinistryQuestions);
 
 async function openSubject(subjectId) {
- const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject || !filesForSubject(subject).length) return;
+ const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject) return;
  localStorage.setItem("biology_last_subject", subjectId);
  $("subjectHome").hidden=true; $("courseLayout").hidden=false;
  $("courseTitle").textContent=subject.name+(subject.id==="biology"?" ١٢":"");
