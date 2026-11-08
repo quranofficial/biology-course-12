@@ -840,6 +840,7 @@ async function openSubject(subjectId) {
  $("courseTitle").textContent=subject.name+(subject.id==="biology"?" ١٢":"");
  $("welcomeTitle").textContent="وانەکانی "+subject.name;
   renderYoutubePlaylists(subjectId);
+  loadMinistryQuestions(subjectId);
  $("lessonList").innerHTML='<div class="empty-state">وانەکان بار دەکرێن...</div>';
  try {
   const result=await loadSubjectLessons(subject); lessons=result.lessons; activeChapter="all"; selectedId=null;
