@@ -511,3 +511,58 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .boot-spinner{width:27px;height:27px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:boot-spin .8s linear infinite}
 .boot-splash h1{margin:0;font-size:23px;font-weight:900}.boot-splash p{margin:0;color:#d8e8f5;font-size:11px;line-height:2}
 @keyframes boot-spin{to{transform:rotate(360deg)}}
+
+
+/* Ministry exam question and answer sections */
+.question-admin{margin-top:26px;padding-top:22px;border-top:1px solid var(--line);text-align:right}
+.question-admin-heading h2,.ministry-heading h2{margin:5px 0;font-size:20px;font-weight:900}
+.question-admin-heading p,.ministry-heading p{margin:0;color:var(--muted);font-size:10px;line-height:1.9}
+.question-admin-form{display:grid;gap:8px;margin-top:17px;text-align:right}
+.question-admin-form label{margin-top:7px;font-size:11px;font-weight:800}
+.question-admin-form input,.question-admin-form select,.question-admin-form textarea,.ministry-filters input,.ministry-filters select,.question-admin-list-head select{width:100%;min-width:0;padding:11px 12px;color:var(--text);background:var(--surface-soft);border:1px solid var(--line);border-radius:11px;font:inherit;font-size:11px;outline:0}
+.question-admin-form textarea{resize:vertical;line-height:1.9}
+.question-admin-actions{display:flex;gap:9px}
+.question-admin-actions button{flex:1;margin:4px 0 0;padding:12px}
+.question-admin-actions #adminQuestionCancel{color:var(--text);background:var(--surface-soft);border:1px solid var(--line)}
+.question-admin-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 10px}
+.question-admin-list-head h3{margin:0;font-size:14px}
+.question-admin-list-head select{width:auto;max-width:52%}
+.question-admin-list{display:grid;gap:9px}
+.admin-question-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;background:var(--surface-soft);border:1px solid var(--line);border-radius:12px}
+.admin-question-copy{min-width:0;flex:1}
+.admin-question-copy strong{display:block;font-size:11px;line-height:1.8;overflow-wrap:anywhere}
+.admin-question-copy small{display:block;margin-top:5px;color:var(--muted);font-size:9px}
+.admin-question-actions{display:flex;gap:6px;flex:none}
+.admin-question-actions button{width:auto;margin:0;padding:8px 10px;color:var(--primary);background:var(--surface-tint);border:1px solid var(--line);border-radius:9px;font:inherit;font-size:9px;font-weight:800;cursor:pointer}
+.admin-question-actions button.danger{color:#c43b48;background:#fff0f1;border-color:#f4d1d4}
+.question-empty{padding:18px;text-align:center;color:var(--muted);background:var(--surface-soft);border:1px dashed var(--line);border-radius:12px;font-size:11px;line-height:1.9}
+.question-empty.error{color:#c43b48}
+.ministry-questions{margin:0 0 24px;padding:19px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--shadow-soft)}
+.ministry-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ministry-count{flex:none;padding:8px 11px;color:var(--primary);background:var(--surface-tint);border:1px solid var(--line);border-radius:10px;font-size:10px;font-weight:900}
+.ministry-filters{display:grid;grid-template-columns:minmax(0,1fr) 155px;gap:9px;margin:16px 0 12px}
+.ministry-question-list{display:grid;gap:9px}
+.ministry-question-item{overflow:hidden;background:var(--surface-soft);border:1px solid var(--line);border-radius:13px}
+.ministry-question-item[open]{border-color:color-mix(in srgb,var(--primary) 45%,var(--line));background:var(--surface-tint)}
+.ministry-question-item summary{display:flex;align-items:center;gap:11px;padding:13px;cursor:pointer;list-style:none}
+.ministry-question-item summary::-webkit-details-marker{display:none}
+.ministry-question-number{width:34px;height:34px;flex:none;display:grid;place-items:center;color:var(--primary);background:var(--surface);border:1px solid var(--line);border-radius:10px;font-size:11px;font-weight:900}
+.ministry-question-copy{min-width:0;flex:1}
+.ministry-question-copy strong{display:block;font-size:11px;line-height:1.9;overflow-wrap:anywhere}
+.ministry-question-copy small{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+.ministry-question-chevron{flex:none;color:var(--primary);font-size:20px;transition:transform .18s}
+.ministry-question-item[open] .ministry-question-chevron{transform:rotate(180deg)}
+.ministry-answer{padding:0 16px 15px 58px;color:var(--text);font-size:11px;line-height:2}
+.ministry-answer b{color:var(--teal)}
+.ministry-answer p{margin:5px 0 0;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:560px){
+ .ministry-questions{padding:13px;border-radius:17px}
+ .ministry-heading h2,.question-admin-heading h2{font-size:17px}
+ .ministry-filters{grid-template-columns:1fr;gap:7px}
+ .ministry-question-item summary{gap:8px;padding:10px}
+ .ministry-question-copy strong{font-size:10px}
+ .ministry-answer{padding:0 12px 13px 48px;font-size:10px}
+ .admin-question-item{align-items:flex-start;flex-direction:column}
+ .admin-question-actions{width:100%}
+ .admin-question-actions button{flex:1}
+}
