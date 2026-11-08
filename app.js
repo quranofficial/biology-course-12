@@ -217,7 +217,7 @@ function showActivationMessage(message, isError = false) {
 function renderLastStudyCard() {
  const card = $("lastStudyCard");
  if (!card) return;
- const subjectId = localStorage.getItem("biology_last_subject") || "";
+ const subjectId = localStorage.getItem("biology_last_studied_subject") || localStorage.getItem("biology_last_subject") || "";
  const lessonId = localStorage.getItem("biology_last_lesson_" + subjectId) || "";
  const subject = SUBJECTS.find(item => item.id === subjectId);
  if (!subject || !lessonId || !filesForSubject(subject).length) { card.hidden = true; return; }
@@ -227,7 +227,7 @@ function renderLastStudyCard() {
  $("lastStudyChapter").textContent = localStorage.getItem("biology_last_chapter") || "بەردەوام بە لە شوێنی دواوە";
 }
 $("resumeLastStudy").addEventListener("click", async () => {
- const subjectId = localStorage.getItem("biology_last_subject") || "";
+ const subjectId = localStorage.getItem("biology_last_studied_subject") || localStorage.getItem("biology_last_subject") || "";
  const lessonId = localStorage.getItem("biology_last_lesson_" + subjectId) || "";
  const subject = SUBJECTS.find(item => item.id === subjectId);
  if (!subject || !lessonId) return;
@@ -624,6 +624,7 @@ function selectLesson(id) {
   if (!lesson) return;
   selectedId = lesson.id;
   const currentSubjectId = localStorage.getItem("biology_last_subject") || "";
+  localStorage.setItem("biology_last_studied_subject", currentSubjectId);
   localStorage.setItem("biology_last_lesson_" + currentSubjectId, String(lesson.id));
   localStorage.setItem("biology_last_title", getTitle(lesson));
   localStorage.setItem("biology_last_chapter", getChapter(lesson));
@@ -853,7 +854,7 @@ async function openSubject(subjectId) {
   if(result.failed.length) console.warn("JSON files could not be loaded:",result.failed);
  } catch(error) { $("lessonList").innerHTML='<div class="empty-state">' + escapeHtml(error.message) + '</div>'; }
 }
-$("backSubjects").addEventListener("click",()=>{$("courseLayout").hidden=true;$("subjectHome").hidden=false;window.scrollTo({top:0,behavior:"smooth"});});
+$("backSubjects").addEventListener("click",()=>{$("courseLayout").hidden=true;$("subjectHome").hidden=false;renderLastStudyCard();window.scrollTo({top:0,behavior:"smooth"});});
 async function init() {
  $("year").textContent=new Date().getFullYear();
  $("homeYear").textContent=new Date().getFullYear();
