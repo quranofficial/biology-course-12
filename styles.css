@@ -463,3 +463,16 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .admin-card>button{width:100%;margin-top:12px;padding:13px;color:white;background:var(--primary);border:0;border-radius:12px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
 .admin-card>button:disabled{opacity:.6;cursor:wait}
 .admin-code-result{margin-top:16px;padding:17px 10px;direction:ltr;text-align:center;letter-spacing:2px;font-size:20px;font-weight:900;color:var(--primary);background:var(--surface-tint);border:1px dashed var(--primary);border-radius:13px;user-select:all}
+
+/* YouTube playlists at the top of supported subjects */
+.youtube-section{margin:0 0 24px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--shadow-soft)}
+.youtube-section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.youtube-section-heading h2{margin:5px 0 2px;font-size:20px;font-weight:900}
+.youtube-section-heading p{margin:0;color:var(--muted);font-size:10px}
+.youtube-open-link{flex:none;padding:9px 12px;color:var(--primary);background:var(--surface-tint);border:1px solid var(--line);border-radius:10px;text-decoration:none;font-size:10px;font-weight:800}
+.youtube-playlist-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 1px 12px;scrollbar-width:thin}
+.youtube-playlist-tab{flex:none;padding:9px 13px;color:var(--muted);background:var(--surface-soft);border:1px solid var(--line);border-radius:10px;font:inherit;font-size:10px;font-weight:800;cursor:pointer}
+.youtube-playlist-tab.active{color:var(--primary);background:var(--surface-tint);border-color:var(--primary)}
+.youtube-player-wrap{width:100%;aspect-ratio:16/9;overflow:hidden;background:#05080d;border-radius:14px}
+.youtube-player-wrap iframe{display:block;width:100%;height:100%;border:0}
+@media(max-width:560px){.youtube-section{padding:12px;border-radius:17px}.youtube-section-heading h2{font-size:17px}.youtube-open-link{padding:8px 9px;font-size:9px}.youtube-playlist-tab{padding:8px 10px;font-size:9px}}
