@@ -162,7 +162,9 @@ const YOUTUBE_PLAYLISTS = {
   {name:"Sound",id:"PL0JjfIYvwyEtBC32rT_tTw7eUNB_1OfIL"}
  ],
  physics: [{name:"فیزیا",id:"PLl0EZqS7iushFGSAAyBKaxJTqTKRuhRxO"}],
- arabic: [{name:"عەرەبی",id:"PLUQijxRpTiLI"}]
+ arabic: [{name:"عەرەبی",id:"PLUQijxRpTiLI"}],
+ kurdish: [{name:"کوردی",id:"PLK-uIQO0MsIU"}],
+ math: [{name:"بیرکاری",id:"PLBc_Bn3Y4oQY"}]
 };
 let activeYoutubePlaylist = {};
 let activeYoutubeVideo = {};
