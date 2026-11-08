@@ -150,6 +150,49 @@ const SUBJECTS = [
  {id:"arabic",name:"عەرەبی",icon:"🖋️",aliases:["عەرەبی","arabic"]},
  {id:"english",name:"ئینگلیزی",icon:"🔤",aliases:["ئینگلیزی","english"]}
 ];
+
+const YOUTUBE_PLAYLISTS = {
+ chemistry: [{name:"کیمیا",id:"PLgiFQfU5qnoP8T4BkrzVoN7alNnVdqxTH"}],
+ english: [
+  {name:"Grammer",id:"PL0JjfIYvwyEu6pTd-kEle48rguD87s64j"},
+  {name:"Listen and read",id:"PL0JjfIYvwyEuALhwc0E6rSzLPKYIQYmIR"},
+  {name:"Reading",id:"PL0JjfIYvwyEtljovEj48rMrrhDIjrJHnd"},
+  {name:"ActivityBook",id:"PL0JjfIYvwyEvhwdK2W5bgs1VKwRDZDAeT"},
+  {name:"Episode",id:"PL0JjfIYvwyEu_JybPFdQG9NRaIOfzGG0r"},
+  {name:"Sound",id:"PL0JjfIYvwyEtBC32rT_tTw7eUNB_1OfIL"}
+ ],
+ physics: [{name:"فیزیا",id:"PLl0EZqS7iushFGSAAyBKaxJTqTKRuhRxO"}],
+ arabic: [{name:"عەرەبی",id:"PLUQijxRpTiLI"}]
+};
+let activeYoutubePlaylist = {};
+function renderYoutubePlaylists(subjectId) {
+ const section = $("youtubeSection");
+ const tabs = $("youtubePlaylistTabs");
+ const frame = $("youtubePlaylistFrame");
+ const openLink = $("youtubeOpenLink");
+ const playlists = YOUTUBE_PLAYLISTS[subjectId] || [];
+ section.hidden = playlists.length === 0;
+ if (!playlists.length) { tabs.replaceChildren(); frame.removeAttribute("src"); return; }
+ let selected = Math.min(activeYoutubePlaylist[subjectId] || 0, playlists.length - 1);
+ const showPlaylist = index => {
+  selected = index;
+  activeYoutubePlaylist[subjectId] = index;
+  const playlist = playlists[index];
+  frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id);
+  frame.title = "Playlist: " + playlist.name;
+  openLink.href = "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlist.id);
+  tabs.querySelectorAll("button").forEach((button,i) => {
+   button.classList.toggle("active", i === index);
+   button.setAttribute("aria-pressed", i === index ? "true" : "false");
+  });
+ };
+ tabs.innerHTML = playlists.map((playlist,index) =>
+  '<button type="button" class="youtube-playlist-tab" data-index="' + index + '">' + escapeHtml(playlist.name) + '</button>'
+ ).join("");
+ tabs.querySelectorAll("button").forEach(button => button.addEventListener("click", () => showPlaylist(Number(button.dataset.index))));
+ showPlaylist(selected);
+}
+
 let selectedId = null;
 let activeChapter = "all";
 let searchTerm = "";
@@ -332,6 +375,7 @@ async function openSubject(subjectId) {
  $("subjectHome").hidden=true; $("courseLayout").hidden=false;
  $("courseTitle").textContent=subject.name+(subject.id==="biology"?" ١٢":"");
  $("welcomeTitle").textContent="وانەکانی "+subject.name;
+  renderYoutubePlaylists(subjectId);
  $("lessonList").innerHTML='<div class="empty-state">وانەکان بار دەکرێن...</div>';
  try {
   const result=await loadSubjectLessons(subject); lessons=result.lessons; activeChapter="all"; selectedId=null;
