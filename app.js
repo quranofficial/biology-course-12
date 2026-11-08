@@ -142,10 +142,10 @@ $("activationForm").addEventListener("submit", async event => {
 let lessons = [];
 let manifestFiles = [];
 const SUBJECTS = [
- {id:"biology",name:"زیندەزانی",icon:"🧬",aliases:["زیندەزانی","biology","biology-12","lessons","response_body_modified"]},
+ {id:"biology",name:"زیندەزانی",icon:"🧬",aliases:["زیندەزانی","biology","biology-12","bayalogy","lessons","response_body_modified"]},
  {id:"chemistry",name:"کیمیا",icon:"⚗️",aliases:["کیمیا","chemistry"]},
  {id:"physics",name:"فیزیا",icon:"⚛️",aliases:["فیزیا","physics"]},
- {id:"math",name:"بیرکاری",icon:"📐",aliases:["بیرکاری","math","mathematics"]},
+ {id:"math",name:"بیرکاری",icon:"📐",aliases:["بیرکاری","math","mathematics","birkary"]},
  {id:"kurdish",name:"کوردی",icon:"📚",aliases:["کوردی","kurdish"]},
  {id:"arabic",name:"عەرەبی",icon:"🖋️",aliases:["عەرەبی","arabic"]},
  {id:"english",name:"ئینگلیزی",icon:"🔤",aliases:["ئینگلیزی","english"]}
@@ -263,7 +263,7 @@ function normalizeJson(parsed) {
 }
 async function readManifest() {
  // تەنها ناوی فایلەکان لێرەیە؛ ناوەڕۆکی JSON لە Private Storage ـەوە وەردەگیرێت.
- manifestFiles = ["زیندەزانی.json", "کوردی.json", "بیرکاری.json"];
+ manifestFiles = ["bayalogy.json", "kurdish.json", "arabic.json", "english.json", "birkary.json"];
  return manifestFiles;
 }
 function filesForSubject(subject) {
