@@ -54,8 +54,14 @@
           <input id="adminQuestionYear" type="text" placeholder="نموونە: ٢٠٢٥" required maxlength="30">
           <label for="adminQuestionText">پرسیار</label>
           <textarea id="adminQuestionText" rows="4" placeholder="پرسیارەکە بنووسە..." required></textarea>
-          <label for="adminAnswerText">وەڵام</label>
-          <textarea id="adminAnswerText" rows="5" placeholder="وەڵامەکە بنووسە..." required></textarea>
+          <label for="adminOptionA">هەڵبژاردەی A</label><textarea id="adminOptionA" rows="2" required placeholder="هەڵبژاردەی یەکەم"></textarea>
+          <label for="adminOptionB">هەڵبژاردەی B</label><textarea id="adminOptionB" rows="2" required placeholder="هەڵبژاردەی دووەم"></textarea>
+          <label for="adminOptionC">هەڵبژاردەی C</label><textarea id="adminOptionC" rows="2" required placeholder="هەڵبژاردەی سێیەم"></textarea>
+          <label for="adminOptionD">هەڵبژاردەی D</label><textarea id="adminOptionD" rows="2" required placeholder="هەڵبژاردەی چوارەم"></textarea>
+          <label for="adminCorrectOption">وەڵامی ڕاست</label>
+          <select id="adminCorrectOption" required><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select>
+          <label for="adminAnswerText">ڕوونکردنەوەی وەڵامی ڕاست</label>
+          <textarea id="adminAnswerText" rows="3" placeholder="ڕوونکردنەوەی وەڵام (ئارەزوومەندانە)"></textarea>
           <div class="question-admin-actions"><button id="adminQuestionSave" type="submit">زیادکردنی پرسیار</button><button id="adminQuestionCancel" type="button" hidden>پاشگەزبوونەوە</button></div>
         </form>
         <div class="question-admin-list-head"><h3>پرسیارە زیادکراوەکان</h3><select id="adminQuestionFilter"><option value="all">هەموو بابەتەکان</option><option value="biology">زیندەزانی</option><option value="chemistry">کیمیا</option><option value="physics">فیزیا</option><option value="math">بیرکاری</option><option value="kurdish">کوردی</option><option value="arabic">عەرەبی</option><option value="english">ئینگلیزی</option></select></div>
@@ -139,9 +145,12 @@
       </section>
 
       <section id="ministryQuestionsSection" class="ministry-questions" hidden>
-        <div class="ministry-heading"><div><span class="eyebrow">پرسیار و وەڵامی وەزاری</span><h2>پرسیارە وەزارییەکان</h2><p>پرسیارەکە بکەرەوە بۆ بینینی وەڵام.</p></div><span class="ministry-count" id="ministryQuestionCount">٠ پرسیار</span></div>
+        <div class="ministry-heading"><div><span class="eyebrow">تاقیکردنەوەی وەزاری</span><h2>Quiz Mode</h2><p>تاقیکردنەوە بکە و دوای کۆتایی هەموو وەڵامەکان ببینە.</p></div><span class="ministry-count" id="ministryQuestionCount">٠ پرسیار</span></div>
         <div class="ministry-filters"><input id="ministryQuestionSearch" type="search" placeholder="گەڕان لە پرسیارەکان..."><select id="ministryQuestionYear"><option value="all">هەموو ساڵەکان</option></select></div>
+        <div class="quiz-toolbar"><button id="startQuizButton" type="button" disabled>دەستپێکردنی تاقیکردنەوە</button><span id="quizAvailability"></span></div>
         <div id="ministryQuestionList" class="ministry-question-list" aria-live="polite"></div>
+        <div id="quizStage" class="quiz-stage" hidden></div>
+        <div id="quizReview" class="quiz-review" hidden></div>
       </section>
       <section id="lessonPlayerCard" class="player-card">
         <div class="player-head">
