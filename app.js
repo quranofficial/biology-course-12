@@ -297,12 +297,19 @@ function normalizePipedVideos(items) {
 async function fetchYoutubePlaylist(playlistId) {
  if (youtubePlaylistCache.has(playlistId)) return youtubePlaylistCache.get(playlistId);
  let lastError = null;
- // سەرەتا Invidious؛ ئەگەر وەڵامی بەتاڵ یان هەڵە بوو، Piped تاقی دەکرێتەوە.
+ // First use the server-side YouTube RSS proxy to avoid browser CORS failures.
+ try {
+  const payload = await activationRequest({action:"get_youtube_playlist", playlist_id:playlistId});
+  if (payload && Array.isArray(payload.videos) && payload.videos.length) {
+   youtubePlaylistCache.set(playlistId, payload.videos);
+   return payload.videos;
+  }
+  lastError = new Error("YouTube RSS هیچ ڤیدیۆیەکی نەگەڕاندەوە.");
+ } catch(error) { lastError = error; }
  for (const host of INVIDIOUS_INSTANCES) {
   try {
    const response = await fetch(host + "/api/v1/playlists/" + encodeURIComponent(playlistId) + "?page=1", {
-    headers: { "Accept": "application/json" },
-    cache: "no-store"
+    headers:{"Accept":"application/json"}, cache:"no-store"
    });
    if (!response.ok) throw new Error("HTTP " + response.status);
    const data = await response.json();
@@ -313,12 +320,10 @@ async function fetchYoutubePlaylist(playlistId) {
    }
   } catch(error) { lastError = error; }
  }
- // Piped جێگرەوەیەکی API ـیە بۆ خوێندنەوەی ناوی ڤیدیۆکانی YouTube Playlist.
  for (const host of PIPED_INSTANCES) {
   try {
    const response = await fetch(host + "/playlists/" + encodeURIComponent(playlistId), {
-    headers: { "Accept": "application/json" },
-    cache: "no-store"
+    headers:{"Accept":"application/json"}, cache:"no-store"
    });
    if (!response.ok) throw new Error("HTTP " + response.status);
    const data = await response.json();
