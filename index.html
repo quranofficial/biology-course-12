@@ -42,6 +42,26 @@
       <button id="generateCodeButton" type="button" hidden>دروستکردنی کۆدی نوێ</button>
       <div id="adminCodeResult" class="admin-code-result" hidden></div>
       <div id="adminMessage" class="activation-message" role="status" aria-live="polite"></div>
+      <section id="adminQuestionManager" class="question-admin" hidden>
+        <div class="question-admin-heading"><span class="eyebrow">بەڕێوەبردنی ناوەڕۆک</span><h2>پرسیارە وەزارییەکان</h2><p>پرسیار و وەڵام بۆ هەموو بابەتەکان زیاد بکە، دەستکاری بکە یان بیسڕەوە.</p></div>
+        <form id="adminQuestionForm" class="question-admin-form">
+          <input id="adminQuestionId" type="hidden">
+          <label for="adminQuestionSubject">بابەت</label>
+          <select id="adminQuestionSubject" required>
+            <option value="biology">زیندەزانی</option><option value="chemistry">کیمیا</option><option value="physics">فیزیا</option><option value="math">بیرکاری</option><option value="kurdish">کوردی</option><option value="arabic">عەرەبی</option><option value="english">ئینگلیزی</option>
+          </select>
+          <label for="adminQuestionYear">ساڵی وەزارەت</label>
+          <input id="adminQuestionYear" type="text" placeholder="نموونە: ٢٠٢٥" required maxlength="30">
+          <label for="adminQuestionText">پرسیار</label>
+          <textarea id="adminQuestionText" rows="4" placeholder="پرسیارەکە بنووسە..." required></textarea>
+          <label for="adminAnswerText">وەڵام</label>
+          <textarea id="adminAnswerText" rows="5" placeholder="وەڵامەکە بنووسە..." required></textarea>
+          <div class="question-admin-actions"><button id="adminQuestionSave" type="submit">زیادکردنی پرسیار</button><button id="adminQuestionCancel" type="button" hidden>پاشگەزبوونەوە</button></div>
+        </form>
+        <div class="question-admin-list-head"><h3>پرسیارە زیادکراوەکان</h3><select id="adminQuestionFilter"><option value="all">هەموو بابەتەکان</option><option value="biology">زیندەزانی</option><option value="chemistry">کیمیا</option><option value="physics">فیزیا</option><option value="math">بیرکاری</option><option value="kurdish">کوردی</option><option value="arabic">عەرەبی</option><option value="english">ئینگلیزی</option></select></div>
+        <div id="adminQuestionList" class="question-admin-list">پرسیارەکان بار دەکرێن...</div>
+        <div id="adminQuestionMessage" class="activation-message" role="status" aria-live="polite"></div>
+      </section>
     </section>
   </main>
   <header class="topbar" id="siteHeader" hidden>
@@ -118,6 +138,11 @@
         </div>
       </section>
 
+      <section id="ministryQuestionsSection" class="ministry-questions" hidden>
+        <div class="ministry-heading"><div><span class="eyebrow">پرسیار و وەڵامی وەزاری</span><h2>پرسیارە وەزارییەکان</h2><p>پرسیارەکە بکەرەوە بۆ بینینی وەڵام.</p></div><span class="ministry-count" id="ministryQuestionCount">٠ پرسیار</span></div>
+        <div class="ministry-filters"><input id="ministryQuestionSearch" type="search" placeholder="گەڕان لە پرسیارەکان..."><select id="ministryQuestionYear"><option value="all">هەموو ساڵەکان</option></select></div>
+        <div id="ministryQuestionList" class="ministry-question-list" aria-live="polite"></div>
+      </section>
       <section class="player-card">
         <div class="player-head">
           <div><span class="live-dot"></span><span>پەخشکردنی وانە</span></div>
@@ -147,6 +172,6 @@
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js"></script>
-  <script src="app.js?v=20261108-16"></script>
+  <script src="app.js?v=20261108-17"></script>
 </body>
 </html>
