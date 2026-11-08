@@ -129,7 +129,10 @@ function renderAdminQuestions() {
   $("adminQuestionSubject").value = item.subject_id;
   $("adminQuestionYear").value = item.exam_year;
   $("adminQuestionText").value = item.question;
-  $("adminAnswerText").value = item.answer;
+  $("adminAnswerText").value = item.answer || "";
+  const opts = Array.isArray(item.options) ? item.options : [];
+  ["A","B","C","D"].forEach((key,i) => $("adminOption"+key).value = opts[i] || "");
+  $("adminCorrectOption").value = item.correct_option || "A";
   $("adminQuestionSave").textContent = "پاشەکەوتکردنی گۆڕانکاری";
   $("adminQuestionCancel").hidden = false;
   $("adminQuestionForm").scrollIntoView({behavior:"smooth",block:"center"});
@@ -152,6 +155,8 @@ function renderAdminQuestions() {
 function resetAdminQuestionForm() {
  $("adminQuestionForm").reset();
  $("adminQuestionId").value = "";
+ ["A","B","C","D"].forEach(key => $("adminOption"+key).value = "");
+ $("adminCorrectOption").value = "A";
  $("adminQuestionSave").textContent = "زیادکردنی پرسیار";
  $("adminQuestionCancel").hidden = true;
 }
@@ -166,7 +171,9 @@ $("adminQuestionForm").addEventListener("submit", async event => {
    subject_id:$("adminQuestionSubject").value,
    exam_year:$("adminQuestionYear").value.trim(),
    question:$("adminQuestionText").value.trim(),
-   answer:$("adminAnswerText").value.trim()
+   answer:$("adminAnswerText").value.trim(),
+   options:["A","B","C","D"].map(key => $("adminOption"+key).value.trim()),
+   correct_option:$("adminCorrectOption").value
   };
   await adminRequest("admin_save_question", values);
   resetAdminQuestionForm();
@@ -705,52 +712,99 @@ async function loadSubjectLessons(subject) {
  return {lessons:sorted(loaded),files:files.length,failed:failed};
 }
 let currentMinistryQuestions = [];
+let quizAnswers = {};
+let quizIndex = 0;
+let quizActive = false;
 function renderMinistryQuestions() {
  const list = $("ministryQuestionList");
  const search = $("ministryQuestionSearch").value.trim().toLocaleLowerCase();
  const year = $("ministryQuestionYear").value;
  const items = currentMinistryQuestions.filter(item => {
   const yearMatch = year === "all" || item.exam_year === year;
-  const text = (item.question + " " + item.answer).toLocaleLowerCase();
-  return yearMatch && text.includes(search);
+  return yearMatch && (item.question + " " + item.exam_year).toLocaleLowerCase().includes(search);
  });
  $("ministryQuestionCount").textContent = toDigits(items.length) + " پرسیار";
+ const eligible = items.filter(item => Array.isArray(item.options) && item.options.length === 4 && item.options.every(Boolean));
+ $("startQuizButton").disabled = eligible.length === 0;
+ $("quizAvailability").textContent = eligible.length ? toDigits(eligible.length)+" پرسیار بۆ تاقیکردنەوە" : "پرسیاری ABCD ئامادە نییە.";
  if (!items.length) {
   list.innerHTML = '<div class="question-empty">هیچ پرسیارێک بۆ ئەم گەڕانە نەدۆزرایەوە.</div>';
   return;
  }
  list.innerHTML = items.map((item,index) =>
-  '<details class="ministry-question-item"><summary><span class="ministry-question-number">' + toDigits(index + 1) +
-  '</span><span class="ministry-question-copy"><strong>' + escapeHtml(item.question) +
-  '</strong><small>وەزارەت · ' + escapeHtml(item.exam_year) + '</small></span><span class="ministry-question-chevron">⌄</span></summary>' +
-  '<div class="ministry-answer"><b>وەڵام:</b><p>' + escapeHtml(item.answer).replace(/\\n/g,"<br>") + '</p></div></details>'
+  '<article class="ministry-question-item quiz-question-preview"><div class="ministry-question-number">'+toDigits(index+1)+'</div><div class="ministry-question-copy"><strong>'+escapeHtml(item.question)+'</strong><small>وەزارەت · '+escapeHtml(item.exam_year)+'</small></div></article>'
  ).join("");
 }
-async function loadMinistryQuestions(subjectId) {
- const section = $("ministryQuestionsSection");
- const list = $("ministryQuestionList");
- section.hidden = false;
- list.innerHTML = '<div class="question-empty">پرسیارە وەزارییەکان بار دەکرێن...</div>';
- $("ministryQuestionSearch").value = "";
- $("ministryQuestionYear").innerHTML = '<option value="all">هەموو ساڵەکان</option>';
+function startQuiz() {
+ const search = $("ministryQuestionSearch").value.trim().toLocaleLowerCase();
+ const year = $("ministryQuestionYear").value;
+ const pool = currentMinistryQuestions.filter(item =>
+  (year === "all" || item.exam_year === year) &&
+  (item.question+" "+item.exam_year).toLocaleLowerCase().includes(search) &&
+  Array.isArray(item.options) && item.options.length===4 && item.options.every(Boolean)
+ );
+ if (!pool.length) return;
+ quizAnswers = {}; quizIndex = 0; quizActive = true;
+ $("ministryQuestionList").hidden = true;
+ $("quizReview").hidden = true;
+ $("quizStage").hidden = false;
+ $("startQuizButton").hidden = true;
+ renderQuizQuestion(pool);
+}
+function currentQuizPool() {
+ const search = $("ministryQuestionSearch").value.trim().toLocaleLowerCase();
+ const year = $("ministryQuestionYear").value;
+ return currentMinistryQuestions.filter(item =>
+  (year==="all" || item.exam_year===year) &&
+  (item.question+" "+item.exam_year).toLocaleLowerCase().includes(search) &&
+  Array.isArray(item.options) && item.options.length===4 && item.options.every(Boolean)
+ );
+}
+function renderQuizQuestion(pool=currentQuizPool()) {
+ const item=pool[quizIndex], stage=$("quizStage");
+ if(!item){finishQuiz(pool);return;}
+ const letters=["A","B","C","D"];
+ stage.innerHTML='<div class="quiz-card"><div class="quiz-progress"><span>پرسیاری '+toDigits(quizIndex+1)+' لە '+toDigits(pool.length)+'</span><span>'+toDigits(Math.round((quizIndex/pool.length)*100))+'%</span></div><div class="quiz-progress-track"><i style="width:'+((quizIndex/pool.length)*100)+'%"></i></div><h3>'+escapeHtml(item.question)+'</h3><div class="quiz-options">'+item.options.map((option,i)=>'<button type="button" class="quiz-option '+(quizAnswers[item.id]===letters[i]?'selected':'')+'" data-quiz-answer="'+letters[i]+'"><b>'+letters[i]+'</b><span>'+escapeHtml(option)+'</span></button>').join('')+'</div><div class="quiz-navigation"><button type="button" id="quizPrev" '+(quizIndex===0?'disabled':'')+'>پێشوو</button><button type="button" id="quizNext" '+(!quizAnswers[item.id]?'disabled':'')+'>'+(quizIndex===pool.length-1?'تەواوکردنی تاقیکردنەوە':'پرسیاری دواتر')+'</button></div></div>';
+ stage.querySelectorAll("[data-quiz-answer]").forEach(btn=>btn.addEventListener("click",()=>{
+  quizAnswers[item.id]=btn.dataset.quizAnswer; renderQuizQuestion(pool);
+ }));
+ $("quizPrev").addEventListener("click",()=>{if(quizIndex>0){quizIndex--;renderQuizQuestion(pool);}});
+ $("quizNext").addEventListener("click",()=>{if(!quizAnswers[item.id])return;if(quizIndex<pool.length-1){quizIndex++;renderQuizQuestion(pool);}else finishQuiz(pool);});
+}
+async function finishQuiz(pool) {
+ quizActive=false;
+ const stage=$("quizStage"), review=$("quizReview");
+ stage.hidden=true; review.hidden=false;
+ review.innerHTML='<div class="question-empty">ئەنجامی تاقیکردنەوە پشکنین دەکرێت...</div>';
  try {
-  const result = await activationRequest({
-   action:"get_ministry_questions",
-   device_token:getDeviceToken(),
-   subject_id:subjectId
-  });
-  currentMinistryQuestions = Array.isArray(result.questions) ? result.questions : [];
-  const years = [...new Set(currentMinistryQuestions.map(item => String(item.exam_year)))];
-  years.sort((a,b) => b.localeCompare(a,undefined,{numeric:true}));
-  $("ministryQuestionYear").innerHTML = '<option value="all">هەموو ساڵەکان</option>' +
-   years.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join("");
-  renderMinistryQuestions();
+  const result=await activationRequest({action:"submit_ministry_quiz",device_token:getDeviceToken(),answers:pool.map(item=>({id:item.id,selected:quizAnswers[item.id]||null}))});
+  const rows=result.review||[];
+  const correct=rows.filter(row=>row.is_correct).length;
+  review.innerHTML='<div class="quiz-result-hero"><strong>'+toDigits(correct)+' / '+toDigits(rows.length)+'</strong><span>نمرەی تاقیکردنەوە · '+toDigits(rows.length?Math.round(correct/rows.length*100):0)+'%</span><button type="button" id="retryQuizButton">دووبارە تاقیکردنەوە</button></div><h3 class="quiz-review-title">پێداچوونەوەی هەموو وەڵامەکان</h3>'+rows.map((row,i)=>'<article class="quiz-review-item '+(row.is_correct?'is-correct':'is-wrong')+'"><h4><span>'+toDigits(i+1)+'</span>'+escapeHtml(row.question)+'</h4><p class="quiz-selected"><b>وەڵامی تۆ:</b> '+(row.selected?'<strong>'+row.selected+' ــ '+escapeHtml(row.selected_text||"")+'</strong>':'<strong>وەڵامت نەداوەتەوە</strong>')+'</p><p class="quiz-correct"><b>وەڵامی ڕاست:</b> <strong>'+row.correct_option+' ــ '+escapeHtml(row.correct_text||"")+'</strong></p>'+(row.is_correct?'<span class="quiz-status good">✓ ڕاستە</span>':'<span class="quiz-status bad">✕ هەڵەت کردووە</span>')+(row.answer?'<p class="quiz-explanation">'+escapeHtml(row.answer)+'</p>':'')+'</article>').join("");
+  $("retryQuizButton").addEventListener("click",()=>{review.hidden=true;$("ministryQuestionList").hidden=false;$("startQuizButton").hidden=false;startQuiz();});
  } catch(error) {
-  list.innerHTML = '<div class="question-empty error">' + escapeHtml(error.message || "نەتوانرا پرسیارەکان بار بکرێن.") + '</div>';
+  review.innerHTML='<div class="question-empty error">'+escapeHtml(error.message||"نەتوانرا ئەنجامەکان پشکنین بکرێن.")+'</div><button type="button" id="retrySubmitQuiz">هەوڵدانەوە</button>';
+  $("retrySubmitQuiz").addEventListener("click",()=>finishQuiz(pool));
  }
 }
-$("ministryQuestionSearch").addEventListener("input", renderMinistryQuestions);
-$("ministryQuestionYear").addEventListener("change", renderMinistryQuestions);
+$("startQuizButton").addEventListener("click",startQuiz);
+async function loadMinistryQuestions(subjectId) {
+ const section=$("ministryQuestionsSection"),list=$("ministryQuestionList");
+ section.hidden=false; list.hidden=false; $("quizStage").hidden=true; $("quizReview").hidden=true; $("startQuizButton").hidden=false;
+ list.innerHTML='<div class="question-empty">پرسیارە وەزارییەکان بار دەکرێن...</div>';
+ $("ministryQuestionSearch").value="";
+ $("ministryQuestionYear").innerHTML='<option value="all">هەموو ساڵەکان</option>';
+ try {
+  const result=await activationRequest({action:"get_ministry_questions",device_token:getDeviceToken(),subject_id:subjectId});
+  currentMinistryQuestions=Array.isArray(result.questions)?result.questions:[];
+  const years=[...new Set(currentMinistryQuestions.map(item=>String(item.exam_year)))];
+  years.sort((a,b)=>b.localeCompare(a,undefined,{numeric:true}));
+  $("ministryQuestionYear").innerHTML='<option value="all">هەموو ساڵەکان</option>'+years.map(value=>'<option value="'+escapeHtml(value)+'">'+escapeHtml(value)+'</option>').join("");
+  renderMinistryQuestions();
+ } catch(error) {list.innerHTML='<div class="question-empty error">'+escapeHtml(error.message||"نەتوانرا پرسیارەکان بار بکرێن.")+'</div>';}
+}
+$("ministryQuestionSearch").addEventListener("input",()=>{if(!quizActive)renderMinistryQuestions();});
+$("ministryQuestionYear").addEventListener("change",()=>{if(!quizActive)renderMinistryQuestions();});
 
 async function openSubject(subjectId) {
  const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject) return;
