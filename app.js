@@ -181,7 +181,6 @@ const YOUTUBE_PLAYLISTS = {
  physics: [{name:"فیزیا",id:"PLl0EZqS7iushFGSAAyBKaxJTqTKRuhRxO"}],
  arabic: [{name:"عەرەبی",id:"PLUQijxRpTiLI"}],
  kurdish: [{name:"کوردی",id:"PLK-uIQO0MsIU"}],
- math: [{name:"بیرکاری",id:"PLBc_Bn3Y4oQY"}]
 };
 let activeYoutubePlaylist = {};
 let activeYoutubeVideo = {};
