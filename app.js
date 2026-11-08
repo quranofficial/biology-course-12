@@ -704,7 +704,6 @@ async function loadSubjectLessons(subject) {
  if (!loaded.length) throw new Error(failed.map(x=>x.path+": "+x.error).join(" | ") || "هیچ وانەیەکی دروست نەدۆزرایەوە.");
  return {lessons:sorted(loaded),files:files.length,failed:failed};
 }
-async 
 let currentMinistryQuestions = [];
 function renderMinistryQuestions() {
  const list = $("ministryQuestionList");
@@ -753,7 +752,7 @@ async function loadMinistryQuestions(subjectId) {
 $("ministryQuestionSearch").addEventListener("input", renderMinistryQuestions);
 $("ministryQuestionYear").addEventListener("change", renderMinistryQuestions);
 
-function openSubject(subjectId) {
+async function openSubject(subjectId) {
  const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject || !filesForSubject(subject).length) return;
  localStorage.setItem("biology_last_subject", subjectId);
  $("subjectHome").hidden=true; $("courseLayout").hidden=false;
