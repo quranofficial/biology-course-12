@@ -296,46 +296,17 @@ function normalizePipedVideos(items) {
 }
 async function fetchYoutubePlaylist(playlistId) {
  if (youtubePlaylistCache.has(playlistId)) return youtubePlaylistCache.get(playlistId);
- let lastError = null;
- // First use the server-side YouTube RSS proxy to avoid browser CORS failures.
- try {
-  const payload = await activationRequest({action:"get_youtube_playlist", playlist_id:playlistId});
-  if (payload && Array.isArray(payload.videos) && payload.videos.length) {
-   youtubePlaylistCache.set(playlistId, payload.videos);
-   return payload.videos;
-  }
-  lastError = new Error("YouTube RSS هیچ ڤیدیۆیەکی نەگەڕاندەوە.");
- } catch(error) { lastError = error; }
- for (const host of INVIDIOUS_INSTANCES) {
-  try {
-   const response = await fetch(host + "/api/v1/playlists/" + encodeURIComponent(playlistId) + "?page=1", {
-    headers:{"Accept":"application/json"}, cache:"no-store"
-   });
-   if (!response.ok) throw new Error("HTTP " + response.status);
-   const data = await response.json();
-   if (!data || !Array.isArray(data.videos)) throw new Error("فۆرماتی لیستی ڤیدیۆکان دروست نییە.");
-   if (data.videos.length) {
-    youtubePlaylistCache.set(playlistId, data.videos);
-    return data.videos;
-   }
-  } catch(error) { lastError = error; }
+ // Use the Supabase server proxy only. Browser-side mirror requests are blocked
+ // by CORS on many instances and hide the useful server error as "Failed to fetch".
+ const payload = await activationRequest({
+  action:"get_youtube_playlist",
+  playlist_id:playlistId
+ });
+ if (!payload || !Array.isArray(payload.videos) || !payload.videos.length) {
+  throw new Error(payload && payload.error ? payload.error : "سێرڤەر هیچ ڤیدیۆیەکی نەگەڕاندەوە.");
  }
- for (const host of PIPED_INSTANCES) {
-  try {
-   const response = await fetch(host + "/playlists/" + encodeURIComponent(playlistId), {
-    headers:{"Accept":"application/json"}, cache:"no-store"
-   });
-   if (!response.ok) throw new Error("HTTP " + response.status);
-   const data = await response.json();
-   const videos = normalizePipedVideos(data && data.relatedStreams);
-   if (videos.length) {
-    youtubePlaylistCache.set(playlistId, videos);
-    return videos;
-   }
-   lastError = new Error("ئەم API ـە هیچ ڤیدیۆیەکی نەگەڕاندەوە.");
-  } catch(error) { lastError = error; }
- }
- throw lastError || new Error("نەتوانرا لیستی Playlist بخوێندرێتەوە.");
+ youtubePlaylistCache.set(playlistId, payload.videos);
+ return payload.videos;
 }
 function renderYoutubeVideoList(videos, playlist) {
  const list = $("youtubeVideoList");
