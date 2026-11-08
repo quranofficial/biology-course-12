@@ -503,3 +503,11 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .youtube-toggle-button.is-open{border-radius:14px 14px 0 0}
 #youtubeContent{padding-top:16px}
 @media(max-width:560px){.youtube-toggle-button{padding:13px 12px;font-size:11px}}
+
+/* Initial activation check splash */
+.boot-splash{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;min-height:100vh;padding:24px;background:linear-gradient(145deg,#101827,#17345a 58%,#087e83);color:#fff;text-align:center}
+.boot-splash-card{display:flex;flex-direction:column;align-items:center;gap:13px;width:min(330px,100%);padding:34px 24px;border:1px solid rgba(255,255,255,.16);border-radius:26px;background:rgba(255,255,255,.08);box-shadow:0 24px 70px rgba(0,0,0,.22);backdrop-filter:blur(12px)}
+.boot-splash-mark{width:66px;height:66px;display:grid;place-items:center;border-radius:20px;background:#fff;color:#17345a;font-size:35px;font-weight:900}
+.boot-spinner{width:27px;height:27px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:boot-spin .8s linear infinite}
+.boot-splash h1{margin:0;font-size:23px;font-weight:900}.boot-splash p{margin:0;color:#d8e8f5;font-size:11px;line-height:2}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
