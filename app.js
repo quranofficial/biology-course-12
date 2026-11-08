@@ -174,10 +174,31 @@ const INVIDIOUS_INSTANCES = [
  "https://yt.chocolatemoo53.com",
  "https://invidious.tiekoetter.com"
 ];
+const PIPED_INSTANCES = [
+ "https://pipedapi.kavin.rocks",
+ "https://pipedapi.leptons.xyz",
+ "https://pipedapi.adminforge.de",
+ "https://api.piped.yt",
+ "https://pipedapi.privacy.com.de"
+];
 const youtubePlaylistCache = new Map();
+function normalizePipedVideos(items) {
+ return (Array.isArray(items) ? items : []).map(video => {
+  const match = String(video.url || "").match(/[?&]v=([^&]+)/);
+  const videoId = video.videoId || (match ? decodeURIComponent(match[1]) : "");
+  if (!videoId) return null;
+  return {
+   videoId,
+   title: video.title || "ڤیدیۆی بێ ناونیشان",
+   author: video.uploader || video.uploaderName || "",
+   videoThumbnails: video.thumbnail ? [{quality:"medium",url:video.thumbnail}] : []
+  };
+ }).filter(Boolean);
+}
 async function fetchYoutubePlaylist(playlistId) {
  if (youtubePlaylistCache.has(playlistId)) return youtubePlaylistCache.get(playlistId);
  let lastError = null;
+ // سەرەتا Invidious؛ ئەگەر وەڵامی بەتاڵ یان هەڵە بوو، Piped تاقی دەکرێتەوە.
  for (const host of INVIDIOUS_INSTANCES) {
   try {
    const response = await fetch(host + "/api/v1/playlists/" + encodeURIComponent(playlistId) + "?page=1", {
@@ -187,8 +208,27 @@ async function fetchYoutubePlaylist(playlistId) {
    if (!response.ok) throw new Error("HTTP " + response.status);
    const data = await response.json();
    if (!data || !Array.isArray(data.videos)) throw new Error("فۆرماتی لیستی ڤیدیۆکان دروست نییە.");
-   youtubePlaylistCache.set(playlistId, data.videos);
-   return data.videos;
+   if (data.videos.length) {
+    youtubePlaylistCache.set(playlistId, data.videos);
+    return data.videos;
+   }
+  } catch(error) { lastError = error; }
+ }
+ // Piped جێگرەوەیەکی API ـیە بۆ خوێندنەوەی ناوی ڤیدیۆکانی YouTube Playlist.
+ for (const host of PIPED_INSTANCES) {
+  try {
+   const response = await fetch(host + "/playlists/" + encodeURIComponent(playlistId), {
+    headers: { "Accept": "application/json" },
+    cache: "no-store"
+   });
+   if (!response.ok) throw new Error("HTTP " + response.status);
+   const data = await response.json();
+   const videos = normalizePipedVideos(data && data.relatedStreams);
+   if (videos.length) {
+    youtubePlaylistCache.set(playlistId, videos);
+    return videos;
+   }
+   lastError = new Error("ئەم API ـە هیچ ڤیدیۆیەکی نەگەڕاندەوە.");
   } catch(error) { lastError = error; }
  }
  throw lastError || new Error("نەتوانرا لیستی Playlist بخوێندرێتەوە.");
