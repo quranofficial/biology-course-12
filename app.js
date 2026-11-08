@@ -33,6 +33,8 @@ $("adminLoginForm").addEventListener("submit", async event => {
     $("adminLoginForm").hidden = true;
     $("generateCodeButton").hidden = false;
     $("adminMessage").textContent = "چوونەژوورەوە سەرکەوتوو بوو.";
+    $("adminQuestionManager").hidden = false;
+    await loadAdminQuestions();
   } catch(error) {
     $("adminMessage").textContent = error.message || "هەڵەیەک ڕوویدا.";
     $("adminMessage").classList.add("error");
@@ -67,6 +69,117 @@ $("generateCodeButton").addEventListener("click", async () => {
     button.disabled = false;
   }
 });
+
+
+let adminQuestionCache = [];
+const SUBJECT_NAMES = {
+ biology:"زیندەزانی", chemistry:"کیمیا", physics:"فیزیا",
+ math:"بیرکاری", kurdish:"کوردی", arabic:"عەرەبی", english:"ئینگلیزی"
+};
+async function adminRequest(action, values = {}) {
+ const response = await fetch(SUPABASE_FUNCTION_URL, {
+  method:"POST",
+  headers:{
+   "Content-Type":"application/json",
+   "apikey":SUPABASE_PUBLISHABLE_KEY,
+   "Authorization":"Bearer " + adminAccessToken
+  },
+  body:JSON.stringify({action,...values})
+ });
+ const data = await response.json().catch(() => ({}));
+ if (!response.ok) throw new Error(data.error || "داواکاری بەڕێوەبەر سەرکەوتوو نەبوو.");
+ return data;
+}
+function showAdminQuestionMessage(message, isError = false) {
+ const el = $("adminQuestionMessage");
+ el.textContent = message;
+ el.classList.toggle("error", isError);
+}
+async function loadAdminQuestions() {
+ const list = $("adminQuestionList");
+ if (!list) return;
+ list.textContent = "پرسیارەکان بار دەکرێن...";
+ try {
+  const result = await adminRequest("admin_list_questions");
+  adminQuestionCache = Array.isArray(result.questions) ? result.questions : [];
+  renderAdminQuestions();
+ } catch(error) {
+  list.textContent = error.message || "نەتوانرا پرسیارەکان بار بکرێن.";
+ }
+}
+function renderAdminQuestions() {
+ const list = $("adminQuestionList");
+ const subject = $("adminQuestionFilter").value;
+ const items = adminQuestionCache.filter(item => subject === "all" || item.subject_id === subject);
+ if (!items.length) {
+  list.innerHTML = '<div class="question-empty">هێشتا هیچ پرسیارێک زیاد نەکراوە.</div>';
+  return;
+ }
+ list.innerHTML = items.map(item =>
+  '<article class="admin-question-item"><div class="admin-question-copy"><strong>' +
+  escapeHtml(item.question) + '</strong><small>' + escapeHtml(SUBJECT_NAMES[item.subject_id] || item.subject_name || "") +
+  ' · ' + escapeHtml(item.exam_year) + '</small></div><div class="admin-question-actions">' +
+  '<button type="button" data-edit-question="' + escapeHtml(item.id) + '">دەستکاری</button>' +
+  '<button type="button" class="danger" data-delete-question="' + escapeHtml(item.id) + '">سڕینەوە</button></div></article>'
+ ).join("");
+ list.querySelectorAll("[data-edit-question]").forEach(button => button.addEventListener("click", () => {
+  const item = adminQuestionCache.find(question => question.id === button.dataset.editQuestion);
+  if (!item) return;
+  $("adminQuestionId").value = item.id;
+  $("adminQuestionSubject").value = item.subject_id;
+  $("adminQuestionYear").value = item.exam_year;
+  $("adminQuestionText").value = item.question;
+  $("adminAnswerText").value = item.answer;
+  $("adminQuestionSave").textContent = "پاشەکەوتکردنی گۆڕانکاری";
+  $("adminQuestionCancel").hidden = false;
+  $("adminQuestionForm").scrollIntoView({behavior:"smooth",block:"center"});
+ }));
+ list.querySelectorAll("[data-delete-question]").forEach(button => button.addEventListener("click", async () => {
+  const item = adminQuestionCache.find(question => question.id === button.dataset.deleteQuestion);
+  if (!item || !confirm("دڵنیایت لە سڕینەوەی ئەم پرسیارە؟")) return;
+  button.disabled = true;
+  try {
+   await adminRequest("admin_delete_question", {id:item.id});
+   adminQuestionCache = adminQuestionCache.filter(question => question.id !== item.id);
+   renderAdminQuestions();
+   showAdminQuestionMessage("پرسیارەکە سڕایەوە.");
+  } catch(error) {
+   button.disabled = false;
+   showAdminQuestionMessage(error.message, true);
+  }
+ }));
+}
+function resetAdminQuestionForm() {
+ $("adminQuestionForm").reset();
+ $("adminQuestionId").value = "";
+ $("adminQuestionSave").textContent = "زیادکردنی پرسیار";
+ $("adminQuestionCancel").hidden = true;
+}
+$("adminQuestionForm").addEventListener("submit", async event => {
+ event.preventDefault();
+ const button = $("adminQuestionSave");
+ button.disabled = true;
+ showAdminQuestionMessage("پرسیارەکە پاشەکەوت دەکرێت...");
+ try {
+  const values = {
+   id:$("adminQuestionId").value.trim() || undefined,
+   subject_id:$("adminQuestionSubject").value,
+   exam_year:$("adminQuestionYear").value.trim(),
+   question:$("adminQuestionText").value.trim(),
+   answer:$("adminAnswerText").value.trim()
+  };
+  await adminRequest("admin_save_question", values);
+  resetAdminQuestionForm();
+  await loadAdminQuestions();
+  showAdminQuestionMessage("پرسیارەکە بە سەرکەوتوویی پاشەکەوت کرا.");
+ } catch(error) {
+  showAdminQuestionMessage(error.message || "پاشەکەوتکردن سەرکەوتوو نەبوو.", true);
+ } finally {
+  button.disabled = false;
+ }
+});
+$("adminQuestionCancel").addEventListener("click", resetAdminQuestionForm);
+$("adminQuestionFilter").addEventListener("change", renderAdminQuestions);
 
 function getDeviceToken() {
   let token = localStorage.getItem("biology_device_token");
@@ -591,7 +704,56 @@ async function loadSubjectLessons(subject) {
  if (!loaded.length) throw new Error(failed.map(x=>x.path+": "+x.error).join(" | ") || "هیچ وانەیەکی دروست نەدۆزرایەوە.");
  return {lessons:sorted(loaded),files:files.length,failed:failed};
 }
-async function openSubject(subjectId) {
+async 
+let currentMinistryQuestions = [];
+function renderMinistryQuestions() {
+ const list = $("ministryQuestionList");
+ const search = $("ministryQuestionSearch").value.trim().toLocaleLowerCase();
+ const year = $("ministryQuestionYear").value;
+ const items = currentMinistryQuestions.filter(item => {
+  const yearMatch = year === "all" || item.exam_year === year;
+  const text = (item.question + " " + item.answer).toLocaleLowerCase();
+  return yearMatch && text.includes(search);
+ });
+ $("ministryQuestionCount").textContent = toDigits(items.length) + " پرسیار";
+ if (!items.length) {
+  list.innerHTML = '<div class="question-empty">هیچ پرسیارێک بۆ ئەم گەڕانە نەدۆزرایەوە.</div>';
+  return;
+ }
+ list.innerHTML = items.map((item,index) =>
+  '<details class="ministry-question-item"><summary><span class="ministry-question-number">' + toDigits(index + 1) +
+  '</span><span class="ministry-question-copy"><strong>' + escapeHtml(item.question) +
+  '</strong><small>وەزارەت · ' + escapeHtml(item.exam_year) + '</small></span><span class="ministry-question-chevron">⌄</span></summary>' +
+  '<div class="ministry-answer"><b>وەڵام:</b><p>' + escapeHtml(item.answer).replace(/\\n/g,"<br>") + '</p></div></details>'
+ ).join("");
+}
+async function loadMinistryQuestions(subjectId) {
+ const section = $("ministryQuestionsSection");
+ const list = $("ministryQuestionList");
+ section.hidden = false;
+ list.innerHTML = '<div class="question-empty">پرسیارە وەزارییەکان بار دەکرێن...</div>';
+ $("ministryQuestionSearch").value = "";
+ $("ministryQuestionYear").innerHTML = '<option value="all">هەموو ساڵەکان</option>';
+ try {
+  const result = await activationRequest({
+   action:"get_ministry_questions",
+   device_token:getDeviceToken(),
+   subject_id:subjectId
+  });
+  currentMinistryQuestions = Array.isArray(result.questions) ? result.questions : [];
+  const years = [...new Set(currentMinistryQuestions.map(item => String(item.exam_year)))];
+  years.sort((a,b) => b.localeCompare(a,undefined,{numeric:true}));
+  $("ministryQuestionYear").innerHTML = '<option value="all">هەموو ساڵەکان</option>' +
+   years.map(value => '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>').join("");
+  renderMinistryQuestions();
+ } catch(error) {
+  list.innerHTML = '<div class="question-empty error">' + escapeHtml(error.message || "نەتوانرا پرسیارەکان بار بکرێن.") + '</div>';
+ }
+}
+$("ministryQuestionSearch").addEventListener("input", renderMinistryQuestions);
+$("ministryQuestionYear").addEventListener("change", renderMinistryQuestions);
+
+function openSubject(subjectId) {
  const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject || !filesForSubject(subject).length) return;
  localStorage.setItem("biology_last_subject", subjectId);
  $("subjectHome").hidden=true; $("courseLayout").hidden=false;
