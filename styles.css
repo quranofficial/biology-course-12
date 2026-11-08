@@ -493,3 +493,13 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .youtube-list-message button{display:block;margin:12px auto 0;padding:8px 14px;border:0;border-radius:9px;background:var(--primary);color:white;font:inherit;cursor:pointer}
 .youtube-list-message small{display:block;margin-top:8px;opacity:.7}
 @media(max-width:650px){.youtube-video-list{grid-template-columns:1fr;max-height:440px}.youtube-video-thumb{width:116px}.youtube-video-copy strong{font-size:11px}}
+
+
+/* Collapsed YouTube playlist launcher */
+.youtube-toggle-button{width:100%;display:flex;align-items:center;justify-content:center;gap:11px;padding:15px 18px;color:#fff;background:linear-gradient(110deg,#d91f35,#a90e24);border:0;border-radius:14px;box-shadow:0 8px 20px rgba(190,24,48,.16);font:inherit;font-size:13px;font-weight:900;cursor:pointer;transition:transform .18s,filter .18s}
+.youtube-toggle-button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.youtube-toggle-icon{width:27px;height:27px;display:grid;place-items:center;color:#d91f35;background:#fff;border-radius:50%;font-size:11px}
+.youtube-toggle-button.is-open .youtube-toggle-icon{transform:rotate(90deg)}
+.youtube-toggle-button.is-open{border-radius:14px 14px 0 0}
+#youtubeContent{padding-top:16px}
+@media(max-width:560px){.youtube-toggle-button{padding:13px 12px;font-size:11px}}
