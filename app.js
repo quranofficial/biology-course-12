@@ -246,6 +246,10 @@ function attachYoutubePlayer() {
  } catch(error) { console.warn("YouTube playback restore unavailable:", error); }
 }
 window.onYouTubeIframeAPIReady = () => attachYoutubePlayer();
+const youtubeApiScript = document.createElement("script");
+youtubeApiScript.src = "https://www.youtube.com/iframe_api";
+youtubeApiScript.async = true;
+document.head.appendChild(youtubeApiScript);
 setInterval(saveYoutubePosition, 3000);
 window.addEventListener("pagehide", () => {
  saveYoutubePosition();
@@ -357,8 +361,12 @@ async function loadYoutubePlaylistVideos(playlist) {
   if (chosen) {
    activeYoutubeVideo[playlist.id] = chosen.videoId;
    localStorage.setItem("biology_youtube_video_" + playlist.id, chosen.videoId);
-   $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(chosen.videoId) + "?list=" + encodeURIComponent(playlist.id) + "&rel=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
-   setTimeout(attachYoutubePlayer, 500);
+   if (youtubePlayer && typeof youtubePlayer.loadVideoById === "function") {
+    youtubePlayer.loadVideoById({videoId:chosen.videoId, startSeconds:readPlaybackTime("youtube",chosen.videoId)});
+   } else {
+    $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(chosen.videoId) + "?list=" + encodeURIComponent(playlist.id) + "&rel=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+    setTimeout(attachYoutubePlayer, 500);
+   }
   }
  } catch(error) {
   list.innerHTML = '<div class="youtube-list-message error">نەتوانرا لیستی ڤیدیۆکان بار بکرێت. تکایە دووبارە هەوڵ بدەوە. <button type="button" id="youtubeRetryButton">دووبارە هەوڵدانەوە</button><small>' + escapeHtml(error.message || "") + '</small></div>';
@@ -387,10 +395,14 @@ function renderYoutubePlaylists(subjectId) {
   localStorage.setItem("biology_youtube_playlist_" + subjectId, String(index));
   const playlist = playlists[index];
   activeYoutubeVideo[playlist.id] = localStorage.getItem("biology_youtube_video_" + playlist.id) || activeYoutubeVideo[playlist.id];
-  frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+  if (youtubePlayer && typeof youtubePlayer.loadPlaylist === "function") {
+   youtubePlayer.loadPlaylist({list:playlist.id});
+  } else {
+   frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+   setTimeout(attachYoutubePlayer, 500);
+  }
   frame.title = "Playlist: " + playlist.name;
   loadYoutubePlaylistVideos(playlist);
-  setTimeout(attachYoutubePlayer, 500);
   openLink.href = "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlist.id);
   tabs.querySelectorAll("button").forEach((button,i) => {
    button.classList.toggle("active", i === index);
@@ -407,7 +419,12 @@ function renderYoutubePlaylists(subjectId) {
   toggleButton.setAttribute("aria-expanded", opening ? "true" : "false");
   toggleButton.classList.toggle("is-open", opening);
   if (opening) showPlaylist(selected);
-  else frame.removeAttribute("src");
+  else {
+   saveYoutubePosition();
+   frame.removeAttribute("src");
+   youtubePlayer = null;
+   youtubePlayerFrame = null;
+  }
  };
 }
 
