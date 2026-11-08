@@ -5,6 +5,8 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zHGmZTaVOdnGiXJuAZmIdw_K0e8BjlS
 
 let adminAccessToken = null;
 async function initializeAdminPanel() {
+  $("bootSplash").hidden = true;
+  $("siteHeader").hidden = true;
   $("activationGate").hidden = true;
   $("subjectHome").hidden = true;
   $("courseLayout").hidden = true;
@@ -93,6 +95,8 @@ function showActivationMessage(message, isError = false) {
   el.classList.toggle("error", isError);
 }
 async function unlockCourse() {
+  $("bootSplash").hidden = true;
+  $("siteHeader").hidden = false;
   $("activationGate").hidden = true;
   $("subjectHome").hidden = false;
   $("courseLayout").hidden = true;
@@ -109,9 +113,11 @@ async function unlockCourse() {
   }
 }
 async function initializeActivation() {
+  $("bootSplash").hidden = false;
+  $("siteHeader").hidden = true;
   $("subjectHome").hidden = true;
   $("courseLayout").hidden = true;
-  $("activationGate").hidden = false;
+  $("activationGate").hidden = true;
   const token = getDeviceToken();
   try {
     const result = await activationRequest({action:"check", device_token:token});
@@ -119,8 +125,12 @@ async function initializeActivation() {
       await unlockCourse();
       return;
     }
+    $("bootSplash").hidden = true;
+    $("activationGate").hidden = false;
     showActivationMessage("کۆدی چالاککردنت بنووسە.");
   } catch(error) {
+    $("bootSplash").hidden = true;
+    $("activationGate").hidden = false;
     showActivationMessage("پشکنین نەکرا: " + error.message + " تکایە پەیوەندی ئینتەرنێت بپشکنە.", true);
   }
 }
