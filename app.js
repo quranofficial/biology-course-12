@@ -96,7 +96,14 @@ async function unlockCourse() {
   $("activationGate").hidden = true;
   $("subjectHome").hidden = false;
   $("courseLayout").hidden = true;
-  try { await readManifest(); renderSubjects(); }
+  try {
+    await readManifest();
+    renderSubjects();
+    const lastSubject = localStorage.getItem("biology_last_subject");
+    if (lastSubject && SUBJECTS.some(item => item.id === lastSubject && filesForSubject(item).length)) {
+      await openSubject(lastSubject);
+    }
+  }
   catch(error) {
     $("subjectGrid").innerHTML = '<div class="empty-state">نەتوانرا لیستی وانەکان لە سێرڤەری پارێزراو بخوێندرێتەوە: ' + escapeHtml(error.message) + '</div>';
   }
@@ -168,6 +175,84 @@ const YOUTUBE_PLAYLISTS = {
 };
 let activeYoutubePlaylist = {};
 let activeYoutubeVideo = {};
+let youtubePlayer = null;
+let youtubePlayerFrame = null;
+let bunnyPlayer = null;
+let currentBunnyStorageKey = null;
+const PLAYBACK_PREFIX = "biology_playback_";
+function playbackKey(type, id) { return PLAYBACK_PREFIX + type + "_" + String(id || ""); }
+function readPlaybackTime(type, id) {
+ const value = Number(localStorage.getItem(playbackKey(type,id)) || 0);
+ return Number.isFinite(value) && value > 3 ? value : 0;
+}
+function savePlaybackTime(type, id, seconds) {
+ const time = Number(seconds);
+ if (!id || !Number.isFinite(time) || time < 0) return;
+ localStorage.setItem(playbackKey(type,id), String(Math.floor(time)));
+}
+function attachBunnyPlayback(frame, videoId) {
+ bunnyPlayer = null;
+ currentBunnyStorageKey = videoId;
+ if (!window.playerjs || !frame) return;
+ try {
+  const player = new playerjs.Player(frame);
+  bunnyPlayer = player;
+  player.on("ready", () => {
+   player.getCurrentTime(current => {
+    const saved = readPlaybackTime("bunny", videoId);
+    if (saved > 3 && (!Number.isFinite(Number(current)) || Number(current) < 3)) player.setCurrentTime(saved);
+   });
+  });
+  player.on("timeupdate", data => {
+   if (data && Number.isFinite(Number(data.seconds))) savePlaybackTime("bunny", videoId, data.seconds);
+  });
+  player.on("pause", () => player.getCurrentTime(t => savePlaybackTime("bunny", videoId, t)));
+  player.on("ended", () => savePlaybackTime("bunny", videoId, 0));
+ } catch(error) { console.warn("Bunny playback restore unavailable:", error); }
+}
+function saveYoutubePosition() {
+ if (!youtubePlayer || typeof youtubePlayer.getCurrentTime !== "function") return;
+ try {
+  const videoId = youtubePlayer.getVideoData().video_id;
+  const time = youtubePlayer.getCurrentTime();
+  if (videoId && Number.isFinite(time)) savePlaybackTime("youtube", videoId, time);
+ } catch(error) {}
+}
+function restoreYoutubePosition(player) {
+ try {
+  const videoId = player.getVideoData().video_id;
+  if (!videoId) return;
+  const saved = readPlaybackTime("youtube", videoId);
+  if (saved > 3) player.seekTo(saved, true);
+ } catch(error) {}
+}
+function attachYoutubePlayer() {
+ const frame = $("youtubePlaylistFrame");
+ if (!frame || !window.YT || !YT.Player) return;
+ if (youtubePlayer && youtubePlayerFrame === frame) return;
+ youtubePlayerFrame = frame;
+ try {
+  youtubePlayer = new YT.Player(frame, {
+   events: {
+    onReady: event => restoreYoutubePosition(event.target),
+    onStateChange: event => {
+     if (event.data === YT.PlayerState.PLAYING || event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) saveYoutubePosition();
+     if (event.data === YT.PlayerState.ENDED) {
+      try { savePlaybackTime("youtube", event.target.getVideoData().video_id, 0); } catch(error) {}
+     }
+    }
+   }
+  });
+ } catch(error) { console.warn("YouTube playback restore unavailable:", error); }
+}
+window.onYouTubeIframeAPIReady = () => attachYoutubePlayer();
+setInterval(saveYoutubePosition, 3000);
+window.addEventListener("pagehide", () => {
+ saveYoutubePosition();
+ if (bunnyPlayer && currentBunnyStorageKey) {
+  try { bunnyPlayer.getCurrentTime(t => savePlaybackTime("bunny", currentBunnyStorageKey, t)); } catch(error) {}
+ }
+});
 const INVIDIOUS_INSTANCES = [
  "https://inv.nadeko.net",
  "https://invidious.nerdvpn.de",
@@ -251,7 +336,13 @@ function renderYoutubeVideoList(videos, playlist) {
  list.querySelectorAll(".youtube-video-item").forEach(button => button.addEventListener("click", () => {
   const videoId = button.dataset.videoId;
   activeYoutubeVideo[playlist.id] = videoId;
-  $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?list=" + encodeURIComponent(playlist.id) + "&autoplay=1&rel=0";
+  localStorage.setItem("biology_youtube_video_" + playlist.id, videoId);
+  if (youtubePlayer && typeof youtubePlayer.loadVideoById === "function") {
+   youtubePlayer.loadVideoById({videoId:videoId, startSeconds:readPlaybackTime("youtube",videoId)});
+  } else {
+   $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?list=" + encodeURIComponent(playlist.id) + "&autoplay=1&rel=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+   setTimeout(attachYoutubePlayer, 500);
+  }
   list.querySelectorAll(".youtube-video-item").forEach(item => item.classList.toggle("active", item === button));
  }));
 }
@@ -265,7 +356,9 @@ async function loadYoutubePlaylistVideos(playlist) {
   const chosen = videos.find(video => video.videoId === selected) || videos[0];
   if (chosen) {
    activeYoutubeVideo[playlist.id] = chosen.videoId;
-   $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(chosen.videoId) + "?list=" + encodeURIComponent(playlist.id) + "&rel=0";
+   localStorage.setItem("biology_youtube_video_" + playlist.id, chosen.videoId);
+   $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(chosen.videoId) + "?list=" + encodeURIComponent(playlist.id) + "&rel=0&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
+   setTimeout(attachYoutubePlayer, 500);
   }
  } catch(error) {
   list.innerHTML = '<div class="youtube-list-message error">نەتوانرا لیستی ڤیدیۆکان بار بکرێت. تکایە دووبارە هەوڵ بدەوە. <button type="button" id="youtubeRetryButton">دووبارە هەوڵدانەوە</button><small>' + escapeHtml(error.message || "") + '</small></div>';
@@ -286,14 +379,18 @@ function renderYoutubePlaylists(subjectId) {
  content.hidden = true;
  toggleButton.setAttribute("aria-expanded", "false");
  toggleButton.classList.remove("is-open");
- let selected = Math.min(activeYoutubePlaylist[subjectId] || 0, playlists.length - 1);
+ let selected = Math.min(Number(localStorage.getItem("biology_youtube_playlist_" + subjectId) ?? activeYoutubePlaylist[subjectId] ?? 0), playlists.length - 1);
+ activeYoutubeVideo[playlists[selected].id] = localStorage.getItem("biology_youtube_video_" + playlists[selected].id) || activeYoutubeVideo[playlists[selected].id];
  const showPlaylist = index => {
   selected = index;
   activeYoutubePlaylist[subjectId] = index;
+  localStorage.setItem("biology_youtube_playlist_" + subjectId, String(index));
   const playlist = playlists[index];
-  frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id);
+  activeYoutubeVideo[playlist.id] = localStorage.getItem("biology_youtube_video_" + playlist.id) || activeYoutubeVideo[playlist.id];
+  frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id) + "&enablejsapi=1&origin=" + encodeURIComponent(location.origin);
   frame.title = "Playlist: " + playlist.name;
   loadYoutubePlaylistVideos(playlist);
+  setTimeout(attachYoutubePlayer, 500);
   openLink.href = "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlist.id);
   tabs.querySelectorAll("button").forEach((button,i) => {
    button.classList.toggle("active", i === index);
@@ -384,6 +481,7 @@ function selectLesson(id) {
   const lesson = lessons.find(x => String(x.id) === String(id));
   if (!lesson) return;
   selectedId = lesson.id;
+  localStorage.setItem("biology_last_lesson_" + (localStorage.getItem("biology_last_subject") || ""), String(lesson.id));
   const url = makeBunnyEmbed(lesson.link);
   $("playerLabel").textContent = getChapter(lesson);
   $("currentTitle").textContent = getTitle(lesson);
@@ -398,6 +496,8 @@ function selectLesson(id) {
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
     wrap.replaceChildren(iframe);
+    const bunnyId = makeBunnyEmbed(lesson.link).match(/\/embed\/387939\/([^?]+)/)?.[1];
+    if (bunnyId) attachBunnyPlayback(iframe, bunnyId);
   } else {
     wrap.innerHTML = `<div class="player-placeholder"><div class="play-symbol">!</div><h2>لینکی ڤیدیۆ بەردەست نییە</h2><p>لینکی ئەم وانەیە لە JSON پشکنین بکە.</p></div>`;
   }
@@ -493,6 +593,7 @@ async function loadSubjectLessons(subject) {
 }
 async function openSubject(subjectId) {
  const subject=SUBJECTS.find(x=>x.id===subjectId); if(!subject || !filesForSubject(subject).length) return;
+ localStorage.setItem("biology_last_subject", subjectId);
  $("subjectHome").hidden=true; $("courseLayout").hidden=false;
  $("courseTitle").textContent=subject.name+(subject.id==="biology"?" ١٢":"");
  $("welcomeTitle").textContent="وانەکانی "+subject.name;
@@ -500,7 +601,12 @@ async function openSubject(subjectId) {
  $("lessonList").innerHTML='<div class="empty-state">وانەکان بار دەکرێن...</div>';
  try {
   const result=await loadSubjectLessons(subject); lessons=result.lessons; activeChapter="all"; selectedId=null;
-  renderChapters(); renderLessons(); updateProgress(); if(lessons.length) selectLesson(lessons[0].id);
+  renderChapters(); renderLessons(); updateProgress();
+  if(lessons.length) {
+   const savedLessonId = localStorage.getItem("biology_last_lesson_" + subjectId);
+   const resumeLesson = lessons.find(item => String(item.id) === savedLessonId) || lessons[0];
+   selectLesson(resumeLesson.id);
+  }
   showToast(toDigits(lessons.length)+" وانە لە "+toDigits(result.files)+" فایل بارکران.");
   if(result.failed.length) console.warn("JSON files could not be loaded:",result.failed);
  } catch(error) { $("lessonList").innerHTML='<div class="empty-state">' + escapeHtml(error.message) + '</div>'; }
