@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#101827">
   <meta name="description" content="پلاتفۆرمی خوێندنی زیندەزانی ١٢">
   <title>خوێندنگە | پلاتفۆرمی وانەکان</title>
-  <link rel="stylesheet" href="styles.css?v=20261108-8">
+  <link rel="stylesheet" href="styles.css?v=20261108-9">
 </head>
 <body>
   <main id="bootSplash" class="boot-splash" role="status" aria-live="polite">
@@ -133,6 +133,14 @@
         </div>
       </div>
 
+      <section id="ministryQuestionsSection" class="ministry-questions" hidden>
+        <div class="ministry-heading"><div><span class="eyebrow">تاقیکردنەوەی وەزاری</span><h2>پرسیارە وەزارییەکان</h2><p>پرسیارەکانی ساڵانی وەزارەت ببینە و خۆت بە شێوازی تاقیکردنەوە تاقی بکەرەوە.</p></div><span class="ministry-count" id="ministryQuestionCount">٠ پرسیار</span></div>
+        <div class="ministry-filters"><input id="ministryQuestionSearch" type="search" placeholder="گەڕان لە پرسیارەکان..."><select id="ministryQuestionYear"><option value="all">هەموو ساڵەکان</option></select></div>
+        <div class="quiz-toolbar"><button id="startQuizButton" type="button" disabled>دەستپێکردنی تاقیکردنەوە</button><span id="quizAvailability"></span></div>
+        <div id="ministryQuestionList" class="ministry-question-list" aria-live="polite"></div>
+        <div id="quizStage" class="quiz-stage" hidden></div>
+        <div id="quizReview" class="quiz-review" hidden></div>
+      </section>
       <section id="youtubeSection" class="youtube-section" hidden>
         <button id="youtubeToggleButton" class="youtube-toggle-button" type="button" aria-expanded="false">
           <span class="youtube-toggle-icon">▶</span>
@@ -149,14 +157,6 @@
         </div>
       </section>
 
-      <section id="ministryQuestionsSection" class="ministry-questions" hidden>
-        <div class="ministry-heading"><div><span class="eyebrow">تاقیکردنەوەی وەزاری</span><h2>Quiz Mode</h2><p>تاقیکردنەوە بکە و دوای کۆتایی هەموو وەڵامەکان ببینە.</p></div><span class="ministry-count" id="ministryQuestionCount">٠ پرسیار</span></div>
-        <div class="ministry-filters"><input id="ministryQuestionSearch" type="search" placeholder="گەڕان لە پرسیارەکان..."><select id="ministryQuestionYear"><option value="all">هەموو ساڵەکان</option></select></div>
-        <div class="quiz-toolbar"><button id="startQuizButton" type="button" disabled>دەستپێکردنی تاقیکردنەوە</button><span id="quizAvailability"></span></div>
-        <div id="ministryQuestionList" class="ministry-question-list" aria-live="polite"></div>
-        <div id="quizStage" class="quiz-stage" hidden></div>
-        <div id="quizReview" class="quiz-review" hidden></div>
-      </section>
       <section id="lessonPlayerCard" class="player-card">
         <div class="player-head">
           <div><span class="live-dot"></span><span>پەخشکردنی وانە</span></div>
@@ -186,6 +186,6 @@
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js"></script>
-  <script src="app.js?v=20261108-22"></script>
+  <script src="app.js?v=20261108-23"></script>
 </body>
 </html>
