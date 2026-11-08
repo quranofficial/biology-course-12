@@ -610,3 +610,30 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .last-study-copy{min-width:0;flex:1}.last-study-copy .eyebrow{font-size:9px}.last-study-copy h2{margin:4px 0;font-size:15px;line-height:1.7;overflow-wrap:anywhere}.last-study-copy p{margin:0;color:var(--muted);font-size:10px}
 .last-study-card>button{display:flex;align-items:center;gap:8px;flex:none;padding:11px 15px;color:#fff;background:var(--primary);border:0;border-radius:12px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
 @media(max-width:560px){.last-study-card{gap:11px;padding:13px}.last-study-icon{width:40px;height:40px;border-radius:12px}.last-study-copy h2{font-size:12px}.last-study-card>button{padding:10px;font-size:10px}}
+
+/* Ministry questions: prominent subject-level learning section */
+.ministry-questions{position:relative;margin:0 0 22px;padding:clamp(16px,2.5vw,24px);overflow:hidden;border:1px solid color-mix(in srgb,var(--primary) 20%,var(--line));background:linear-gradient(145deg,var(--surface),color-mix(in srgb,var(--surface-tint) 58%,var(--surface)));box-shadow:0 12px 34px rgba(25,48,85,.07)}
+.ministry-questions:before{content:"";position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#2459cb,#0ca58a,#e2a43b)}
+.ministry-heading{position:relative;align-items:center}
+.ministry-heading>div:before{content:"✦";display:inline-grid;place-items:center;width:34px;height:34px;margin-bottom:7px;color:#fff;background:linear-gradient(135deg,#2459cb,#087e83);border-radius:11px;font-size:16px;box-shadow:0 6px 15px #2459cb2b}
+.ministry-heading h2{font-size:clamp(19px,2.4vw,24px);letter-spacing:-.3px}
+.ministry-heading p{max-width:560px;font-size:11px}
+.ministry-count{padding:9px 13px;border-radius:30px}
+.ministry-filters{margin:18px 0 13px}
+.ministry-filters input:focus,.ministry-filters select:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 10%,transparent)}
+.quiz-toolbar{padding:12px 13px;margin:0 0 12px;background:var(--surface-soft);border:1px solid var(--line);border-radius:13px}
+.quiz-toolbar button{min-width:190px;background:linear-gradient(110deg,#2459cb,#087e83)}
+.quiz-toolbar span{font-weight:700}
+.ministry-question-item{display:flex;align-items:center;gap:12px;padding:12px 14px;transition:border-color .18s,transform .18s,background .18s}
+.ministry-question-item:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--primary) 42%,var(--line))}
+.ministry-question-number{width:38px;height:38px;border-radius:12px}
+.ministry-question-copy strong{font-size:12px}
+@media(max-width:560px){
+ .ministry-questions{margin-bottom:17px;padding:14px}
+ .ministry-heading{align-items:flex-start}
+ .ministry-heading>div:before{width:30px;height:30px}
+ .ministry-count{padding:7px 9px;font-size:9px}
+ .quiz-toolbar{padding:10px;gap:8px}
+ .quiz-toolbar button{width:100%;min-width:0}
+ .ministry-question-item{padding:10px}
+}
