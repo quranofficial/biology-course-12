@@ -604,3 +604,9 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
 .quiz-status.good{color:#087a57;background:#e5f8f0}.quiz-status.bad{color:#b42336;background:#fff0f1}
 .quiz-explanation{padding:10px;background:var(--surface-soft);border-radius:9px}
 @media(max-width:560px){.quiz-toolbar{align-items:flex-start;flex-direction:column}.quiz-option{padding:10px}.quiz-option span{font-size:11px}.quiz-review-item{padding:12px}}
+
+.last-study-card{display:flex;align-items:center;gap:16px;margin:0 0 30px;padding:18px 20px;background:linear-gradient(115deg,var(--surface),var(--surface-soft));border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-soft)}
+.last-study-card[hidden]{display:none}.last-study-icon{width:48px;height:48px;flex:none;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#2459cb,#087e83);border-radius:15px;font-size:18px}
+.last-study-copy{min-width:0;flex:1}.last-study-copy .eyebrow{font-size:9px}.last-study-copy h2{margin:4px 0;font-size:15px;line-height:1.7;overflow-wrap:anywhere}.last-study-copy p{margin:0;color:var(--muted);font-size:10px}
+.last-study-card>button{display:flex;align-items:center;gap:8px;flex:none;padding:11px 15px;color:#fff;background:var(--primary);border:0;border-radius:12px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}
+@media(max-width:560px){.last-study-card{gap:11px;padding:13px}.last-study-icon{width:40px;height:40px;border-radius:12px}.last-study-copy h2{font-size:12px}.last-study-card>button{padding:10px;font-size:10px}}
