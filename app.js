@@ -165,6 +165,72 @@ const YOUTUBE_PLAYLISTS = {
  arabic: [{name:"عەرەبی",id:"PLUQijxRpTiLI"}]
 };
 let activeYoutubePlaylist = {};
+let activeYoutubeVideo = {};
+const INVIDIOUS_INSTANCES = [
+ "https://inv.nadeko.net",
+ "https://invidious.nerdvpn.de",
+ "https://yt.chocolatemoo53.com",
+ "https://invidious.tiekoetter.com"
+];
+const youtubePlaylistCache = new Map();
+async function fetchYoutubePlaylist(playlistId) {
+ if (youtubePlaylistCache.has(playlistId)) return youtubePlaylistCache.get(playlistId);
+ let lastError = null;
+ for (const host of INVIDIOUS_INSTANCES) {
+  try {
+   const response = await fetch(host + "/api/v1/playlists/" + encodeURIComponent(playlistId) + "?page=1", {
+    headers: { "Accept": "application/json" },
+    cache: "no-store"
+   });
+   if (!response.ok) throw new Error("HTTP " + response.status);
+   const data = await response.json();
+   if (!data || !Array.isArray(data.videos)) throw new Error("فۆرماتی لیستی ڤیدیۆکان دروست نییە.");
+   youtubePlaylistCache.set(playlistId, data.videos);
+   return data.videos;
+  } catch(error) { lastError = error; }
+ }
+ throw lastError || new Error("نەتوانرا لیستی Playlist بخوێندرێتەوە.");
+}
+function renderYoutubeVideoList(videos, playlist) {
+ const list = $("youtubeVideoList");
+ if (!videos.length) {
+  list.innerHTML = '<div class="youtube-list-message">هیچ ڤیدیۆیەک لەم Playlist ـەدا نەدۆزرایەوە.</div>';
+  return;
+ }
+ const selected = activeYoutubeVideo[playlist.id] || videos[0].videoId;
+ list.innerHTML = videos.map((video,index) => {
+  const thumb = video.videoThumbnails && (video.videoThumbnails.find(x => x.quality === "medium") || video.videoThumbnails[0]);
+  const image = thumb && thumb.url ? thumb.url : "https://i.ytimg.com/vi/" + encodeURIComponent(video.videoId) + "/mqdefault.jpg";
+  return '<button type="button" class="youtube-video-item ' + (video.videoId === selected ? "active" : "") + '" data-video-id="' + escapeHtml(video.videoId) + '" data-index="' + index + '">' +
+   '<span class="youtube-video-thumb"><img loading="lazy" src="' + escapeHtml(image) + '" alt="" referrerpolicy="no-referrer"><i>▶</i></span>' +
+   '<span class="youtube-video-copy"><strong>' + escapeHtml(video.title || "ڤیدیۆی بێ ناونیشان") + '</strong><small>' + escapeHtml(video.author || "") + '</small></span>' +
+   '<span class="youtube-video-number">' + toDigits(index + 1) + '</span></button>';
+ }).join("");
+ list.querySelectorAll(".youtube-video-item").forEach(button => button.addEventListener("click", () => {
+  const videoId = button.dataset.videoId;
+  activeYoutubeVideo[playlist.id] = videoId;
+  $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(videoId) + "?list=" + encodeURIComponent(playlist.id) + "&autoplay=1&rel=0";
+  list.querySelectorAll(".youtube-video-item").forEach(item => item.classList.toggle("active", item === button));
+ }));
+}
+async function loadYoutubePlaylistVideos(playlist) {
+ const list = $("youtubeVideoList");
+ list.innerHTML = '<div class="youtube-list-message">لیستی ڤیدیۆکان بار دەکرێت...</div>';
+ try {
+  const videos = await fetchYoutubePlaylist(playlist.id);
+  renderYoutubeVideoList(videos, playlist);
+  const selected = activeYoutubeVideo[playlist.id];
+  const chosen = videos.find(video => video.videoId === selected) || videos[0];
+  if (chosen) {
+   activeYoutubeVideo[playlist.id] = chosen.videoId;
+   $("youtubePlaylistFrame").src = "https://www.youtube.com/embed/" + encodeURIComponent(chosen.videoId) + "?list=" + encodeURIComponent(playlist.id) + "&rel=0";
+  }
+ } catch(error) {
+  list.innerHTML = '<div class="youtube-list-message error">نەتوانرا لیستی ڤیدیۆکان بار بکرێت. تکایە دووبارە هەوڵ بدەوە. <button type="button" id="youtubeRetryButton">دووبارە هەوڵدانەوە</button><small>' + escapeHtml(error.message || "") + '</small></div>';
+  const retry = $("youtubeRetryButton");
+  if (retry) retry.addEventListener("click", () => { youtubePlaylistCache.delete(playlist.id); loadYoutubePlaylistVideos(playlist); });
+ }
+}
 function renderYoutubePlaylists(subjectId) {
  const section = $("youtubeSection");
  const tabs = $("youtubePlaylistTabs");
@@ -180,6 +246,7 @@ function renderYoutubePlaylists(subjectId) {
   const playlist = playlists[index];
   frame.src = "https://www.youtube.com/embed/videoseries?list=" + encodeURIComponent(playlist.id);
   frame.title = "Playlist: " + playlist.name;
+  loadYoutubePlaylistVideos(playlist);
   openLink.href = "https://www.youtube.com/playlist?list=" + encodeURIComponent(playlist.id);
   tabs.querySelectorAll("button").forEach((button,i) => {
    button.classList.toggle("active", i === index);
