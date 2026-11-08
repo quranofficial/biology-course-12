@@ -236,9 +236,14 @@ function renderYoutubePlaylists(subjectId) {
  const tabs = $("youtubePlaylistTabs");
  const frame = $("youtubePlaylistFrame");
  const openLink = $("youtubeOpenLink");
+ const content = $("youtubeContent");
+ const toggleButton = $("youtubeToggleButton");
  const playlists = YOUTUBE_PLAYLISTS[subjectId] || [];
  section.hidden = playlists.length === 0;
  if (!playlists.length) { tabs.replaceChildren(); frame.removeAttribute("src"); return; }
+ content.hidden = true;
+ toggleButton.setAttribute("aria-expanded", "false");
+ toggleButton.classList.remove("is-open");
  let selected = Math.min(activeYoutubePlaylist[subjectId] || 0, playlists.length - 1);
  const showPlaylist = index => {
   selected = index;
@@ -257,7 +262,14 @@ function renderYoutubePlaylists(subjectId) {
   '<button type="button" class="youtube-playlist-tab" data-index="' + index + '">' + escapeHtml(playlist.name) + '</button>'
  ).join("");
  tabs.querySelectorAll("button").forEach(button => button.addEventListener("click", () => showPlaylist(Number(button.dataset.index))));
- showPlaylist(selected);
+ toggleButton.onclick = () => {
+  const opening = content.hidden;
+  content.hidden = !opening;
+  toggleButton.setAttribute("aria-expanded", opening ? "true" : "false");
+  toggleButton.classList.toggle("is-open", opening);
+  if (opening) showPlaylist(selected);
+  else frame.removeAttribute("src");
+ };
 }
 
 let selectedId = null;
