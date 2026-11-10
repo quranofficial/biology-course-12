@@ -637,3 +637,11 @@ footer { padding: 35px 0 10px; color: var(--muted); text-align: center; font-siz
  .quiz-toolbar button{width:100%;min-width:0}
  .ministry-question-item{padding:10px}
 }
+
+
+/* Manual activation-code creation */
+.manual-code-form{margin-top:16px;padding:15px;background:var(--surface-soft);border:1px solid var(--line);border-radius:14px}
+.manual-code-form label{display:block;margin:0 0 8px;font-size:11px;font-weight:800}
+.manual-code-form input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;background:var(--surface);color:var(--text);font:inherit;font-size:14px;direction:ltr;text-align:center;letter-spacing:1px}
+.manual-code-form button{width:100%;margin-top:10px;padding:13px;color:white;background:var(--teal);border:0;border-radius:12px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.manual-code-form button:disabled{opacity:.6;cursor:wait}
