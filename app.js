@@ -32,6 +32,7 @@ $("adminLoginForm").addEventListener("submit", async event => {
     $("adminPassword").value = "";
     $("adminLoginForm").hidden = true;
     $("generateCodeButton").hidden = false;
+    $("manualCodeForm").hidden = false;
     $("adminMessage").textContent = "چوونەژوورەوە سەرکەوتوو بوو.";
     $("adminQuestionManager").hidden = false;
     await loadAdminQuestions();
@@ -64,6 +65,33 @@ $("generateCodeButton").addEventListener("click", async () => {
     $("adminMessage").textContent = "کۆدەکە دروست کرا. تەنها ئەم جارە پیشان دەدرێت؛ لای خۆت بیپارێزە.";
   } catch(error) {
     $("adminMessage").textContent = error.message || "هەڵەیەک ڕوویدا.";
+    $("adminMessage").classList.add("error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+
+$("manualCodeForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const button = $("createManualCodeButton");
+  const code = $("manualActivationCode").value.trim().toUpperCase();
+  if (!/^[A-Z0-9]{3,32}$/.test(code)) {
+    $("adminMessage").textContent = "کۆد دەبێت ٣ تا ٣٢ پیت یان ژمارە بێت، بێ بۆشایی و نیشانە.";
+    $("adminMessage").classList.add("error");
+    return;
+  }
+  button.disabled = true;
+  $("adminMessage").classList.remove("error");
+  $("adminMessage").textContent = "کۆدی دەستی دروست دەکرێت...";
+  try {
+    const data = await adminRequest("create_code", {custom_code:code});
+    $("adminCodeResult").hidden = false;
+    $("adminCodeResult").textContent = data.code;
+    $("adminMessage").textContent = "کۆدی دەستی دروست کرا. کۆدەکە تەنها یەک جار پیشان دەدرێت.";
+    $("manualCodeForm").reset();
+  } catch(error) {
+    $("adminMessage").textContent = error.message || "دروستکردنی کۆدی دەستی سەرکەوتوو نەبوو.";
     $("adminMessage").classList.add("error");
   } finally {
     button.disabled = false;
