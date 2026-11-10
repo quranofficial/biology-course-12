@@ -282,27 +282,9 @@ async function unlockCourse() {
     $("subjectGrid").innerHTML = '<div class="empty-state">نەتوانرا لیستی وانەکان لە سێرڤەری پارێزراو بخوێندرێتەوە: ' + escapeHtml(error.message) + '</div>';
   }
 }
-async function initializeActivation() {
-  $("bootSplash").hidden = false;
-  $("siteHeader").hidden = true;
-  $("subjectHome").hidden = true;
-  $("courseLayout").hidden = true;
-  $("activationGate").hidden = true;
-  const token = getDeviceToken();
-  try {
-    const result = await activationRequest({action:"check", device_token:token});
-    if (result.activated) {
-      await unlockCourse();
-      return;
-    }
-    $("bootSplash").hidden = true;
-    $("activationGate").hidden = false;
-    showActivationMessage("کۆدی چالاککردنت بنووسە.");
-  } catch(error) {
-    $("bootSplash").hidden = true;
-    $("activationGate").hidden = false;
-    showActivationMessage("پشکنین نەکرا: " + error.message + " تکایە پەیوەندی ئینتەرنێت بپشکنە.", true);
-  }
+async function initializePublicCourse() {
+  // Public access: visitors can open the course without a device activation key.
+  await unlockCourse();
 }
 $("activationForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -891,6 +873,6 @@ async function init() {
    await initializeAdminPanel();
    return;
  }
- await initializeActivation();
+ await initializePublicCourse();
 }
 init();
