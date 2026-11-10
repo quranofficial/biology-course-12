@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#101827">
   <meta name="description" content="پلاتفۆرمی خوێندنی زیندەزانی ١٢">
   <title>خوێندنگە | پلاتفۆرمی وانەکان</title>
-  <link rel="stylesheet" href="styles.css?v=20261108-9">
+  <link rel="stylesheet" href="styles.css?v=20261110-1">
 </head>
 <body>
   <main id="bootSplash" class="boot-splash" role="status" aria-live="polite">
@@ -39,7 +39,12 @@
         <input id="adminPassword" type="password" autocomplete="current-password" required>
         <button id="adminLoginButton" type="submit">چوونەژوورەوە</button>
       </form>
-      <button id="generateCodeButton" type="button" hidden>دروستکردنی کۆدی نوێ</button>
+      <button id="generateCodeButton" type="button" hidden>دروستکردنی کۆدی هەڕەمەکی</button>
+      <form id="manualCodeForm" class="manual-code-form" hidden>
+        <label for="manualActivationCode">کۆدی دڵخوازت بنووسە (٣ تا ٣٢ پیت/ژمارە)</label>
+        <input id="manualActivationCode" type="text" inputmode="text" autocomplete="off" minlength="3" maxlength="32" pattern="[A-Za-z0-9]{3,32}" placeholder="نموونە: 123 یان BIO2026" required>
+        <button id="createManualCodeButton" type="submit">دروستکردنی کۆدی دەستی</button>
+      </form>
       <div id="adminCodeResult" class="admin-code-result" hidden></div>
       <div id="adminMessage" class="activation-message" role="status" aria-live="polite"></div>
       <section id="adminQuestionManager" class="question-admin" hidden>
@@ -186,6 +191,6 @@
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js"></script>
-  <script src="app.js?v=20261108-23"></script>
+  <script src="app.js?v=20261110-1"></script>
 </body>
 </html>
